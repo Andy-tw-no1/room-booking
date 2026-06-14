@@ -7,13 +7,27 @@ $date = $_POST["date"];
 $start = $_POST["start"];
 $end = $_POST["end"];
 
-// 檢查開始時間是否早於結束時間
-if ($start >= $end)
-{
-    die("開始時間必須早於結束時間");
+
+// ===== 1. 時間格式轉換 =====
+// 假設格式是 "10:00"
+
+$startTime = strtotime($start);
+$endTime = strtotime($end);
+
+// ===== 2. 檢查時間是否合法 =====
+if ($endTime <= $startTime) {
+    die("結束時間必須大於開始時間");
 }
 
-// 檢查是否與既有預約重疊
+// ===== 3. 限制最多 2 小時 =====
+$diffHours = ($endTime - $startTime) / 3600;
+
+if ($diffHours > 2) {
+    die("一次最多只能預約 2 小時");
+}
+
+
+// ===== 4. 檢查是否重疊 =====
 $sql = "SELECT * FROM bookings
         WHERE date='$date'
         AND NOT (
@@ -23,28 +37,24 @@ $sql = "SELECT * FROM bookings
 
 $result = $conn->query($sql);
 
-if (!$result)
-{
+if (!$result) {
     die("查詢失敗：" . $conn->error);
 }
 
-if ($result->num_rows > 0)
-{
+if ($result->num_rows > 0) {
     die("此時段已被預約");
 }
 
-// 新增預約
+
+// ===== 5. 寫入資料 =====
 $sql = "INSERT INTO bookings
         (user, date, start_time, end_time)
         VALUES
         ('$user', '$date', '$start', '$end')";
 
-if ($conn->query($sql))
-{
+if ($conn->query($sql)) {
     echo "預約成功";
-}
-else
-{
+} else {
     echo "預約失敗：" . $conn->error;
 }
 
