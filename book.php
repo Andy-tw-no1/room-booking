@@ -60,7 +60,15 @@ $sql = "INSERT INTO bookings
         ('$user', '$date', '$start', '$end')";
 
 if ($conn->query($sql)) {
-    echo "預約成功";
+
+    echo "預約成功<br><br>";
+
+    echo '<a href="view.php">
+            <button>查看預約名單</button>
+          </a>';
+
+} else {
+    echo "預約失敗：" . $conn->error;
 } else {
     echo "預約失敗：" . $conn->error;
 }
