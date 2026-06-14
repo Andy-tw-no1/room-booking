@@ -1,7 +1,8 @@
 <?php
 include "db.php";
 
-$sql = "SELECT * FROM bookings ORDER BY date, start_time";
+$sql = "SELECT * FROM bookings
+        ORDER BY date ASC, start_time ASC";
 $result = $conn->query($sql);
 
 if (!$result) {
