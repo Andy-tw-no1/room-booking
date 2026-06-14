@@ -1,8 +1,10 @@
 <?php
 include "db.php";
 
+// 依日期 + 時間排序
 $sql = "SELECT * FROM bookings
         ORDER BY date ASC, start_time ASC";
+
 $result = $conn->query($sql);
 
 if (!$result) {
@@ -22,16 +24,19 @@ if (!$result) {
 
 <table border="1" cellpadding="10">
     <tr>
-        <th>順序</th>
+        <th>編號</th>
         <th>姓名</th>
         <th>日期</th>
-        <th>開始</th>
-        <th>結束</th>
+        <th>開始時間</th>
+        <th>結束時間</th>
     </tr>
 
-    <?php while($row = $result->fetch_assoc()) { ?>
+    <?php
+    $i = 1;
+    while($row = $result->fetch_assoc()) {
+    ?>
     <tr>
-        <td><?php echo $row["id"]; ?></td>
+        <td><?php echo $i++; ?></td>
         <td><?php echo $row["user"]; ?></td>
         <td><?php echo $row["date"]; ?></td>
         <td><?php echo $row["start_time"]; ?></td>
