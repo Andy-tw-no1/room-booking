@@ -2,11 +2,11 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>預約系統</title>
+    <title>教室預約系統</title>
 </head>
 <body>
 
-<h2>團室預約</h2>
+<h2>教室預約</h2>
 
 <form action="book.php" method="POST">
 
@@ -26,12 +26,20 @@
     <input type="time" name="end" required>
     <br><br>
 
-    <!-- 驗證碼 -->
-    驗證碼：
+    <!-- 文字驗證碼 -->
+    <div>
+        驗證碼：
+    </div>
+
+    <div style="border:1px solid #ccc;width:120px;text-align:center;padding:5px;">
+        <iframe src="captcha.php" style="border:none;width:120px;height:40px;"></iframe>
+    </div>
+
     <br>
-    <img src="captcha.php" onclick="this.src='captcha.php?'+Math.random()" style="cursor:pointer;">
-    <br>
+
+    輸入驗證碼：
     <input type="text" name="captcha" required>
+
     <br><br>
 
     <button type="submit">預約</button>
