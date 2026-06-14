@@ -22,8 +22,8 @@ if (!$result) {
 
 <table border="1" cellpadding="10">
     <tr>
-        <th>ID</th>
-        <th>使用者</th>
+        <th>順序</th>
+        <th>姓名</th>
         <th>日期</th>
         <th>開始</th>
         <th>結束</th>
