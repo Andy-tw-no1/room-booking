@@ -17,7 +17,7 @@ if ($captcha != $_SESSION["captcha"]) {
 }
 
 
-// ===== 3. 時間轉換 =====
+// ===== 3. 時間檢查 =====
 $startTime = strtotime($start);
 $endTime = strtotime($end);
 
@@ -26,15 +26,13 @@ if ($endTime <= $startTime) {
 }
 
 
-// ===== 4. 限制 2 小時 =====
-$diffHours = ($endTime - $startTime) / 3600;
-
-if ($diffHours > 2) {
+// ===== 4. 最多 2 小時 =====
+if (($endTime - $startTime) / 3600 > 2) {
     die("一次最多只能預約 2 小時");
 }
 
 
-// ===== 5. 檢查時間重疊 =====
+// ===== 5. 檢查重疊 =====
 $sql = "SELECT * FROM bookings
         WHERE date='$date'
         AND NOT (
@@ -67,8 +65,12 @@ if ($conn->query($sql)) {
             <button>查看預約名單</button>
           </a>';
 
-} else {
-    echo "預約失敗：" . $conn->error;
+    echo ' ';
+
+    echo '<a href="booking.html">
+            <button>繼續預約</button>
+          </a>';
+
 } else {
     echo "預約失敗：" . $conn->error;
 }
