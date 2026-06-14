@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>團室預約 - 登入</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        input {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: 200px;
+        }
+
+        button {
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>屏大熱音團室預約系統</h2>
+
+    <input type="text" id="studentId" placeholder="學號">
+    <input type="password" id="password" placeholder="密碼">
+
+    <button onclick="login()">登入</button>
+
+    <script>
+        function login() {
+            let id = document.getElementById("studentId").value;
+            let pw = document.getElementById("password").value;
+
+            if (id && pw) {
+                // 先假裝登入成功
+                localStorage.setItem("user", id);
+                window.location.href = "booking.html";
+            } else {
+                alert("請輸入完整資料");
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+<?php
+include "db.php";
+
+$user = "Andy"; // 之後改成登入帳號
+
+$sql = "SELECT * FROM bookings WHERE user='$user'";
+$result = $conn->query($sql);
+
+while($row = $result->fetch_assoc()){
+    echo $row['date']." ".$row['start_time']."<br>";
+}
+?>
