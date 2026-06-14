@@ -6,9 +6,12 @@ $user = $_POST["user"];
 $date = $_POST["date"];
 $start = $_POST["start"];
 $end = $_POST["end"];
-$sql = "SELECT * FROM bookings
+$sql = $sql = "SELECT * FROM bookings
         WHERE date='$date'
-        AND start_time='$start'";
+        AND NOT (
+            '$end' <= start_time
+            OR '$start' >= end_time
+        )";
 
 $result = $conn->query($sql);
 
