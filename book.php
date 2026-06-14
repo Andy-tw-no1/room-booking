@@ -1,25 +1,32 @@
 <?php
 
+session_start();
 include "db.php";
 
+// ===== 1. 取得資料 =====
 $user = $_POST["user"];
 $date = $_POST["date"];
 $start = $_POST["start"];
 $end = $_POST["end"];
+$captcha = $_POST["captcha"];
 
 
-// ===== 1. 時間格式轉換 =====
-// 假設格式是 "10:00"
+// ===== 2. 驗證碼檢查 =====
+if ($captcha != $_SESSION["captcha"]) {
+    die("驗證碼錯誤");
+}
 
+
+// ===== 3. 時間轉換 =====
 $startTime = strtotime($start);
 $endTime = strtotime($end);
 
-// ===== 2. 檢查時間是否合法 =====
 if ($endTime <= $startTime) {
     die("結束時間必須大於開始時間");
 }
 
-// ===== 3. 限制最多 2 小時 =====
+
+// ===== 4. 限制 2 小時 =====
 $diffHours = ($endTime - $startTime) / 3600;
 
 if ($diffHours > 2) {
@@ -27,7 +34,7 @@ if ($diffHours > 2) {
 }
 
 
-// ===== 4. 檢查是否重疊 =====
+// ===== 5. 檢查時間重疊 =====
 $sql = "SELECT * FROM bookings
         WHERE date='$date'
         AND NOT (
@@ -46,7 +53,7 @@ if ($result->num_rows > 0) {
 }
 
 
-// ===== 5. 寫入資料 =====
+// ===== 6. 寫入資料 =====
 $sql = "INSERT INTO bookings
         (user, date, start_time, end_time)
         VALUES
