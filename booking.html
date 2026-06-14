@@ -1,43 +1,42 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="UTF-8">
-    <title>團室預約</title>
+    <title>預約系統</title>
 </head>
-
 <body>
 
-    <h2>團室預約</h2>
+<h2>教室預約</h2>
 
-    <form action="book.php" method="POST">
+<form action="book.php" method="POST">
 
-        姓名：
-        <input type="text" name="user">
+    使用者：
+    <input type="text" name="user" required>
+    <br><br>
 
-        <br><br>
+    日期：
+    <input type="date" name="date" required>
+    <br><br>
 
-        日期：
-        <input type="date" name="date">
+    開始時間：
+    <input type="time" name="start" required>
+    <br><br>
 
-        <br><br>
+    結束時間：
+    <input type="time" name="end" required>
+    <br><br>
 
-        開始時間：
-        <input type="time" name="start">
+    <!-- 驗證碼 -->
+    驗證碼：
+    <br>
+    <img src="captcha.php" onclick="this.src='captcha.php?'+Math.random()" style="cursor:pointer;">
+    <br>
+    <input type="text" name="captcha" required>
+    <br><br>
 
-        <br><br>
+    <button type="submit">預約</button>
 
-        結束時間：
-        <input type="time" name="end">
-
-        <br><br>
-
-        <button type="submit">
-            預約
-        </button>
-
-    </form>
+</form>
 
 </body>
-
 </html>
