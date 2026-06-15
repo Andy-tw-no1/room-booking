@@ -1,86 +1,104 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>教室預約系統</title>
-</head>
-<body>
+<?php
 
-<h2>教室預約系統</h2>
+session_start();
+include "db.php";
 
-<!-- 🟢 即時時間 -->
-<h3 id="nowTime"></h3>
+// =======================
+// 1. 取得資料
+// =======================
+$user = $_POST["user"];
+$date = $_POST["date"];
+$start = $_POST["start"];
+$end = $_POST["end"];
+$captcha = $_POST["captcha"];
 
-<script>
-function updateTime()
-{
-    const now = new Date();
 
-    const y = now.getFullYear();
-    const m = String(now.getMonth()+1).padStart(2,'0');
-    const d = String(now.getDate()).padStart(2,'0');
-
-    const h = String(now.getHours()).padStart(2,'0');
-    const i = String(now.getMinutes()).padStart(2,'0');
-    const s = String(now.getSeconds()).padStart(2,'0');
-
-    document.getElementById("nowTime").innerHTML =
-        `目前時間：${y}-${m}-${d} ${h}:${i}:${s}`;
+// =======================
+// 2. 驗證碼
+// =======================
+if ($captcha != $_SESSION["captcha"]) {
+    unset($_SESSION["captcha"]);
+    die("驗證碼錯誤");
 }
 
-setInterval(updateTime,1000);
-updateTime();
+// 用過就清掉，避免重複用
+unset($_SESSION["captcha"]);
 
-// 刷新驗證碼
-function refreshCaptcha()
-{
-    document.getElementById("cap").src = "captcha.php?"+Date.now();
+
+// =======================
+// 3. 週一開放限制（核心）
+// =======================
+// 本週星期一 00:00
+$monday = new DateTime('monday this week');
+$monday->setTime(0, 0, 0);
+
+$now = new DateTime();
+
+// ❗未到週一 00:00 → 禁止預約
+if ($now < $monday) {
+    die("尚未開放本週預約（每週一 00:00 開放）");
 }
-</script>
 
-<hr>
 
-<form action="book.php" method="POST">
+// =======================
+// 4. 時間合法性
+// =======================
+$startTime = strtotime($start);
+$endTime = strtotime($end);
 
-    使用者：
-    <input type="text" name="user" required>
-    <br><br>
+if ($endTime <= $startTime) {
+    die("結束時間必須大於開始時間");
+}
 
-    日期：
-    <input type="date" name="date" required>
-    <br><br>
 
-    開始時間：
-    <input type="time" name="start" required>
-    <br><br>
+// =======================
+// 5. 最多 2 小時
+// =======================
+if (($endTime - $startTime) / 3600 > 2) {
+    die("一次最多只能預約 2 小時");
+}
 
-    結束時間：
-    <input type="time" name="end" required>
-    <br><br>
 
-    <!-- 🟢 驗證碼 -->
-    驗證碼：
-    <br>
+// =======================
+// 6. 時段重疊檢查
+// =======================
+$sql = "SELECT * FROM bookings
+        WHERE date='$date'
+        AND NOT (
+            '$end' <= start_time
+            OR '$start' >= end_time
+        )";
 
-    <iframe id="cap"
-        src="captcha.php"
-        style="border:1px solid #ccc;width:120px;height:40px;">
-    </iframe>
+$result = $conn->query($sql);
 
-    <br>
+if (!$result) {
+    die("查詢失敗：" . $conn->error);
+}
 
-    <button type="button" onclick="refreshCaptcha()">刷新驗證碼</button>
+if ($result->num_rows > 0) {
+    die("此時段已被預約");
+}
 
-    <br><br>
 
-    輸入驗證碼：
-    <input type="text" name="captcha" required>
+// =======================
+// 7. 寫入資料
+// =======================
+$sql = "INSERT INTO bookings
+        (user, date, start_time, end_time)
+        VALUES
+        ('$user', '$date', '$start', '$end')";
 
-    <br><br>
+if ($conn->query($sql)) {
 
-    <button type="submit">預約</button>
+    echo "預約成功<br><br>";
 
-</form>
+    echo '<a href="view.php"><button>查看預約名單</button></a> ';
+    echo '<a href="booking.html"><button>繼續預約</button></a>';
 
-</body>
-</html>
+} else {
+    echo "預約失敗：" . $conn->error;
+}
+
+$conn->close();
+
+?>
