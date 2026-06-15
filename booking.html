@@ -26,6 +26,58 @@
 
 <h2>團室預約系統</h2>
 
+<h3 id="nowTime"></h3>
+
+<script>
+// =====================
+// 即時時間
+// =====================
+function updateTime()
+{
+    const now = new Date();
+
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const d = String(now.getDate()).padStart(2,'0');
+
+    const h = String(now.getHours()).padStart(2,'0');
+    const i = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+
+    document.getElementById("nowTime").innerHTML =
+        `目前時間：${y}-${m}-${d} ${h}:${i}:${s}`;
+}
+
+setInterval(updateTime,1000);
+updateTime();
+
+
+// =====================
+// 限制不能選過去日期
+// =====================
+window.onload = function () {
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("dateInput").min = today;
+};
+
+
+// =====================
+// 即時預覽
+// =====================
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelector("form").addEventListener("input", function () {
+
+        const date = document.querySelector("[name=date]").value;
+        const start = document.querySelector("[name=start]").value;
+        const end = document.querySelector("[name=end]").value;
+
+        document.getElementById("preview").innerText =
+            `預約：${date} ${start} ~ ${end}`;
+    });
+});
+</script>
+
 <hr>
 
 <form action="book.php" method="POST">
@@ -35,7 +87,7 @@
     <br><br>
 
     日期：
-    <input type="date" name="date" required>
+    <input type="date" name="date" required id="dateInput">
     <br><br>
 
     開始時間：
@@ -45,6 +97,8 @@
     結束時間：
     <input type="time" name="end" step="1800" required>
     <br><br>
+
+    <p id="preview"></p>
 
     <button type="submit">預約</button>
 
