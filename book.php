@@ -8,7 +8,7 @@ date_default_timezone_set("Asia/Taipei");
 // =====================
 // 0. 檢查資料
 // =====================
-if (!isset($_POST["user"], $_POST["date"], $_POST["start"], $_POST["end"], $_POST["captcha"])) {
+if (!isset($_POST["user"], $_POST["date"], $_POST["start"], $_POST["end"])) {
     die("資料不完整");
 }
 
@@ -19,29 +19,9 @@ $user = trim($_POST["user"]);
 $date = $_POST["date"];
 $start = $_POST["start"];
 $end = $_POST["end"];
-$captcha = $_POST["captcha"];
 
 // =====================
-// 2. 驗證碼
-// =====================
-if (!isset($_SESSION["captcha"]) || $captcha !== $_SESSION["captcha"]) {
-    unset($_SESSION["captcha"]);
-    die("驗證碼錯誤");
-}
-unset($_SESSION["captcha"]);
-
-// =====================
-// 3. 週一 00:00 開放
-// =====================
-$weekStart = new DateTime("monday this week 00:00:00");
-$now = new DateTime();
-
-if ($now < $weekStart) {
-    die("尚未開放本週預約（每週一 00:00 開放）");
-}
-
-// =====================
-// 4. 時間檢查
+// 2. 時間檢查
 // =====================
 $startDT = DateTime::createFromFormat("H:i", $start);
 $endDT   = DateTime::createFromFormat("H:i", $end);
@@ -55,7 +35,7 @@ if ($endDT <= $startDT) {
 }
 
 // =====================
-// 5. 最多 2 小時
+// 3. 最多 2 小時
 // =====================
 $diff = ($endDT->getTimestamp() - $startDT->getTimestamp()) / 3600;
 
@@ -64,7 +44,7 @@ if ($diff > 2) {
 }
 
 // =====================
-// 6. 防重疊
+// 4. 防重疊
 // =====================
 $stmt = $conn->prepare("
     SELECT id FROM bookings
@@ -84,7 +64,7 @@ if ($result->num_rows > 0) {
 }
 
 // =====================
-// 7. 寫入資料
+// 5. 寫入資料
 // =====================
 $stmt = $conn->prepare("
     INSERT INTO bookings (user, date, start_time, end_time)
@@ -96,7 +76,6 @@ $stmt->bind_param("ssss", $user, $date, $start, $end);
 if ($stmt->execute()) {
 
     echo "預約成功<br><br>";
-
     echo '<a href="view.php"><button>查看名單</button></a> ';
     echo '<a href="booking.html"><button>繼續預約</button></a>';
 
