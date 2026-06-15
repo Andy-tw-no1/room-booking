@@ -3,8 +3,10 @@
 session_start();
 include "db.php";
 
+date_default_timezone_set("Asia/Taipei");
+
 // =====================
-// 0. 防止沒資料
+// 0. 檢查資料
 // =====================
 if (!isset($_POST["user"], $_POST["date"], $_POST["start"], $_POST["end"], $_POST["captcha"])) {
     die("資料不完整");
@@ -31,27 +33,24 @@ unset($_SESSION["captcha"]);
 
 
 // =====================
-// 3. ⭐ 週一 00:00 開放限制（正確版）
+// 3. ⭐ 週一 00:00 開放（正確關鍵修正）
 // =====================
-date_default_timezone_set("Asia/Taipei");
+
+// 取得「本週週一 00:00」
+$weekStart = new DateTime();
+$weekStart->modify('monday this week');
+$weekStart->setTime(0, 0, 0);
 
 $now = new DateTime();
 
-// 取得「本週週一 00:00」
-$monday = new DateTime();
-$monday->modify('monday this week');
-$monday->setTime(0, 0, 0);
-
-// ❗DEBUG用（確認有沒有進來）
-// die("NOW=".$now->format('Y-m-d H:i:s')." MON=".$monday->format('Y-m-d H:i:s'));
-
-if ($now < $monday) {
-    die("尚未開放本週預約（週一 00:00 開放）");
+// ❗如果現在還沒到週一 00:00 → 全部禁止
+if ($now < $weekStart) {
+    die("尚未開放本週預約（每週一 00:00 開放）");
 }
 
 
 // =====================
-// 4. 時間合法性
+// 4. 時間檢查
 // =====================
 $startTime = strtotime($start);
 $endTime = strtotime($end);
@@ -74,7 +73,7 @@ if (($endTime - $startTime) / 3600 > 2) {
 
 
 // =====================
-// 6. 防重疊（核心搶票邏輯）
+// 6. 防重疊
 // =====================
 $sql = "SELECT * FROM bookings
         WHERE date='$date'
