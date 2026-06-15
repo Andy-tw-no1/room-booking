@@ -2,12 +2,39 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>屏大熱音團室預約系統</title>
+    <title>教室預約系統</title>
 </head>
 <body>
 
-<h2>團室預約</h2>
+<h2>教室預約系統</h2>
 
+<!-- 🟢 即時時間 -->
+<h3 id="nowTime"></h3>
+
+<script>
+function updateTime()
+{
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    const second = String(now.getSeconds()).padStart(2, '0');
+
+    document.getElementById("nowTime").innerHTML =
+        `目前時間：${year}-${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+updateTime();
+setInterval(updateTime, 1000);
+</script>
+
+<hr>
+
+<!-- 🟢 預約表單 -->
 <form action="book.php" method="POST">
 
     使用者：
@@ -26,13 +53,12 @@
     <input type="time" name="end" required>
     <br><br>
 
-    <!-- 文字驗證碼 -->
-    <div>
-        驗證碼：
-    </div>
+    <!-- 🟢 驗證碼 -->
+    <div>驗證碼：</div>
 
     <div style="border:1px solid #ccc;width:120px;text-align:center;padding:5px;">
-        <iframe src="captcha.php" style="border:none;width:120px;height:40px;"></iframe>
+        <iframe src="captcha.php"
+                style="border:none;width:120px;height:40px;"></iframe>
     </div>
 
     <br>
