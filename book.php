@@ -3,7 +3,16 @@
 session_start();
 include "db.php";
 
-// ===== 1. 取得資料 =====
+// =====================
+// 0. 防止沒資料
+// =====================
+if (!isset($_POST["user"], $_POST["date"], $_POST["start"], $_POST["end"], $_POST["captcha"])) {
+    die("資料不完整");
+}
+
+// =====================
+// 1. 取得資料
+// =====================
 $user = $_POST["user"];
 $date = $_POST["date"];
 $start = $_POST["start"];
@@ -11,28 +20,62 @@ $end = $_POST["end"];
 $captcha = $_POST["captcha"];
 
 
-// ===== 2. 驗證碼檢查 =====
-if ($captcha != $_SESSION["captcha"]) {
+// =====================
+// 2. 驗證碼（一次性）
+// =====================
+if (!isset($_SESSION["captcha"]) || $captcha != $_SESSION["captcha"]) {
+    unset($_SESSION["captcha"]);
     die("驗證碼錯誤");
+}
+unset($_SESSION["captcha"]);
+
+
+// =====================
+// 3. ⭐ 週一 00:00 開放限制（正確版）
+// =====================
+date_default_timezone_set("Asia/Taipei");
+
+$now = new DateTime();
+
+// 取得「本週週一 00:00」
+$monday = new DateTime();
+$monday->modify('monday this week');
+$monday->setTime(0, 0, 0);
+
+// ❗DEBUG用（確認有沒有進來）
+// die("NOW=".$now->format('Y-m-d H:i:s')." MON=".$monday->format('Y-m-d H:i:s'));
+
+if ($now < $monday) {
+    die("尚未開放本週預約（週一 00:00 開放）");
 }
 
 
-// ===== 3. 時間檢查 =====
+// =====================
+// 4. 時間合法性
+// =====================
 $startTime = strtotime($start);
 $endTime = strtotime($end);
+
+if ($startTime === false || $endTime === false) {
+    die("時間格式錯誤");
+}
 
 if ($endTime <= $startTime) {
     die("結束時間必須大於開始時間");
 }
 
 
-// ===== 4. 最多 2 小時 =====
+// =====================
+// 5. 最多 2 小時
+// =====================
 if (($endTime - $startTime) / 3600 > 2) {
     die("一次最多只能預約 2 小時");
 }
 
 
-// ===== 5. 檢查重疊 =====
+// =====================
+// 6. 防重疊（核心搶票邏輯）
+// =====================
 $sql = "SELECT * FROM bookings
         WHERE date='$date'
         AND NOT (
@@ -43,7 +86,7 @@ $sql = "SELECT * FROM bookings
 $result = $conn->query($sql);
 
 if (!$result) {
-    die("查詢失敗：" . $conn->error);
+    die("SQL錯誤：" . $conn->error);
 }
 
 if ($result->num_rows > 0) {
@@ -51,25 +94,20 @@ if ($result->num_rows > 0) {
 }
 
 
-// ===== 6. 寫入資料 =====
+// =====================
+// 7. 寫入資料
+// =====================
 $sql = "INSERT INTO bookings
-        (user, date, start_time, end_time)
-        VALUES
-        ('$user', '$date', '$start', '$end')";
+(user, date, start_time, end_time)
+VALUES
+('$user','$date','$start','$end')";
 
 if ($conn->query($sql)) {
 
     echo "預約成功<br><br>";
 
-    echo '<a href="view.php">
-            <button>查看預約名單</button>
-          </a>';
-
-    echo ' ';
-
-    echo '<a href="booking.html">
-            <button>繼續預約</button>
-          </a>';
+    echo '<a href="view.php"><button>查看名單</button></a> ';
+    echo '<a href="booking.html"><button>繼續預約</button></a>';
 
 } else {
     echo "預約失敗：" . $conn->error;
