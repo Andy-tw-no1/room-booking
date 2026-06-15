@@ -3,7 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>屏大熱音團室預約系統</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+        }
+
+        input {
+            padding: 6px;
+            margin: 5px 0;
+        }
+
+        button {
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+    </style>
 </head>
+
 <body>
 
 <h2>團室預約系統</h2>
@@ -30,10 +48,31 @@ function updateTime()
 setInterval(updateTime,1000);
 updateTime();
 
+// 限制不能選過去日期
+window.onload = function () {
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("dateInput").min = today;
+};
+
+// 刷新驗證碼
 function refreshCaptcha()
 {
     document.getElementById("cap").src = "captcha.php?" + Date.now();
 }
+
+// 即時預覽
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelector("form").addEventListener("input", function () {
+
+        const date = document.querySelector("[name=date]").value;
+        const start = document.querySelector("[name=start]").value;
+        const end = document.querySelector("[name=end]").value;
+
+        document.getElementById("preview").innerText =
+            `預約：${date} ${start} ~ ${end}`;
+    });
+});
 </script>
 
 <hr>
@@ -45,24 +84,23 @@ function refreshCaptcha()
     <br><br>
 
     日期：
-    <input type="date" name="date" required>
+    <input type="date" name="date" required id="dateInput">
     <br><br>
 
     開始時間：
-    <input type="time" name="start" required>
+    <input type="time" name="start" step="1800" required>
     <br><br>
 
     結束時間：
-    <input type="time" name="end" required>
+    <input type="time" name="end" step="1800" required>
     <br><br>
 
     驗證碼：
     <br>
 
-    <iframe id="cap"
+    <img id="cap"
         src="captcha.php"
         style="border:1px solid #ccc;width:120px;height:40px;">
-    </iframe>
 
     <br>
 
@@ -74,6 +112,8 @@ function refreshCaptcha()
     <input type="text" name="captcha" required>
 
     <br><br>
+
+    <p id="preview"></p>
 
     <button type="submit">預約</button>
 
