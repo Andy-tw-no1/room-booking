@@ -16,25 +16,30 @@ function updateTime()
 {
     const now = new Date();
 
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const d = String(now.getDate()).padStart(2,'0');
 
-    const hour = String(now.getHours()).padStart(2, '0');
-    const minute = String(now.getMinutes()).padStart(2, '0');
-    const second = String(now.getSeconds()).padStart(2, '0');
+    const h = String(now.getHours()).padStart(2,'0');
+    const i = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
 
     document.getElementById("nowTime").innerHTML =
-        `目前時間：${year}-${month}-${day} ${hour}:${minute}:${second}`;
+        `目前時間：${y}-${m}-${d} ${h}:${i}:${s}`;
 }
 
+setInterval(updateTime,1000);
 updateTime();
-setInterval(updateTime, 1000);
+
+// 刷新驗證碼
+function refreshCaptcha()
+{
+    document.getElementById("cap").src = "captcha.php?"+Date.now();
+}
 </script>
 
 <hr>
 
-<!-- 🟢 預約表單 -->
 <form action="book.php" method="POST">
 
     使用者：
@@ -54,14 +59,19 @@ setInterval(updateTime, 1000);
     <br><br>
 
     <!-- 🟢 驗證碼 -->
-    <div>驗證碼：</div>
+    驗證碼：
+    <br>
 
-    <div style="border:1px solid #ccc;width:120px;text-align:center;padding:5px;">
-        <iframe src="captcha.php"
-                style="border:none;width:120px;height:40px;"></iframe>
-    </div>
+    <iframe id="cap"
+        src="captcha.php"
+        style="border:1px solid #ccc;width:120px;height:40px;">
+    </iframe>
 
     <br>
+
+    <button type="button" onclick="refreshCaptcha()">刷新驗證碼</button>
+
+    <br><br>
 
     輸入驗證碼：
     <input type="text" name="captcha" required>
