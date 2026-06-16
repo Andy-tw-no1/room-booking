@@ -23,7 +23,7 @@ if (!$result) {
 
 <body>
 
-<h2>📅 預約名單（未過期）</h2>
+<h2>📅 預約名單</h2>
 
 <table border="1" cellpadding="10">
     <tr>
