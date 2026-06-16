@@ -7,7 +7,7 @@ date_default_timezone_set("Asia/Taipei");
 // =====================
 // 0. 檢查資料
 // =====================
-if (!isset($_POST["user"], $_POST["date"], $_POST["start"], $_POST["end"])) {
+if (!isset($_POST["user"], $_POST["band_name"], $_POST["date"], $_POST["start"], $_POST["end"])) {
     die("資料不完整");
 }
 
@@ -15,6 +15,7 @@ if (!isset($_POST["user"], $_POST["date"], $_POST["start"], $_POST["end"])) {
 // 1. 取得資料
 // =====================
 $user = trim($_POST["user"]);
+$band_name = trim($_POST["band_name"]);
 $date = $_POST["date"];
 $start = $_POST["start"];
 $end = $_POST["end"];
@@ -63,18 +64,25 @@ if ($result->num_rows > 0) {
 }
 
 // =====================
-// 5. 寫入資料
+// 5. ⭐ 送出時間（修正8小時問題）
+// =====================
+$created_at = date("Y-m-d H:i:s");
+
+// =====================
+// 6. 寫入資料
 // =====================
 $stmt = $conn->prepare("
-    INSERT INTO bookings (user, date, start_time, end_time)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO bookings (user, band_name, date, start_time, end_time, created_at)
+    VALUES (?, ?, ?, ?, ?, ?)
 ");
 
-$stmt->bind_param("ssss", $user, $date, $start, $end);
+$stmt->bind_param("ssssss", $user, $band_name, $date, $start, $end, $created_at);
 
 if ($stmt->execute()) {
 
     echo "預約成功<br><br>";
+    echo "送出時間：$created_at<br><br>";
+
     echo '<a href="view.php"><button>查看名單</button></a> ';
     echo '<a href="booking.html"><button>繼續預約</button></a>';
 
