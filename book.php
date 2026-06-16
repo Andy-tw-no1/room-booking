@@ -44,52 +44,67 @@ if ($diff > 2) {
 }
 
 // =====================
-// 4. 防重疊
+// ⭐ 核心安全機制：獲取排隊鎖 (防止多人同時預約衝突)
 // =====================
-$stmt = $conn->prepare("
-    SELECT id FROM bookings
-    WHERE date = ?
-    AND NOT (
-        ? <= start_time
-        OR ? >= end_time
-    )
-");
+// 鎖定名為 'booking_lock' 的資源，最多等候 5 秒
+$lock_query = $conn->query("SELECT GET_LOCK('booking_lock', 5) AS locked");
+$lock_row = $lock_query->fetch_assoc();
 
-$stmt->bind_param("sss", $date, $end, $start);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows > 0) {
-    die("此時段已被預約");
+if (!$lock_row || $lock_row['locked'] != 1) {
+    die("伺服器正忙碌中，請稍後再試");
 }
 
-// =====================
-// 5. ⭐ 送出時間（修正8小時問題）
-// =====================
-$created_at = date("Y-m-d H:i:s");
+try {
+    // =====================
+    // 4. 防重疊 (在鎖定狀態下檢查，絕對安全)
+    // =====================
+    $stmt = $conn->prepare("
+        SELECT id FROM bookings
+        WHERE date = ?
+        AND NOT (
+            ? <= start_time
+            OR ? >= end_time
+        )
+    ");
 
-// =====================
-// 6. 寫入資料
-// =====================
-$stmt = $conn->prepare("
-    INSERT INTO bookings (user, band_name, date, start_time, end_time, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-");
+    $stmt->bind_param("sss", $date, $end, $start);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-$stmt->bind_param("ssssss", $user, $band_name, $date, $start, $end, $created_at);
+    if ($result->num_rows > 0) {
+        die("此時段已被預約");
+    }
 
-if ($stmt->execute()) {
+    // =====================
+    // 5. ⭐ 送出時間（台北時區）
+    // =====================
+    $created_at = date("Y-m-d H:i:s");
 
-    echo "預約成功<br><br>";
-    echo "送出時間：$created_at<br><br>";
+    // =====================
+    // 6. 寫入資料
+    // =====================
+    $stmt = $conn->prepare("
+        INSERT INTO bookings (user, band_name, date, start_time, end_time, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
 
-    echo '<a href="view.php"><button>查看名單</button></a> ';
-    echo '<a href="booking.html"><button>繼續預約</button></a>';
+    $stmt->bind_param("ssssss", $user, $band_name, $date, $start, $end, $created_at);
 
-} else {
-    echo "預約失敗：" . $conn->error;
+    if ($stmt->execute()) {
+        echo "預約成功<br><br>";
+        echo "送出時間：$created_at<br><br>";
+        echo '<a href="view.php"><button>查看名單</button></a> ';
+        echo '<a href="booking.html"><button>繼續預約</button></a>';
+    } else {
+        echo "預約失敗：" . $conn->error;
+    }
+
+} finally {
+    // =====================
+    // ⭐ 無論成功或失敗，最後一定要釋放鎖，讓下一個人可以使用
+    // =====================
+    $conn->query("SELECT RELEASE_LOCK('booking_lock')");
+    $conn->close();
 }
-
-$conn->close();
 
 ?>
