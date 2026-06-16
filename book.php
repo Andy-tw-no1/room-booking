@@ -16,12 +16,12 @@ if (!isset($_POST["user"], $_POST["band_name"], $_POST["date"], $_POST["start"],
 // =====================
 $user = trim($_POST["user"]);
 $band_name = trim($_POST["band_name"]);
-$date = $_POST["date"];
+$date = $_POST["date"]; // 使用者選的日期 (例如: 2026-06-19)
 $start = $_POST["start"];
 $end = $_POST["end"];
 
 // =====================
-// 2. 時間檢查
+// 2. 時間格式與基本檢查
 // =====================
 $startDT = DateTime::createFromFormat("H:i", $start);
 $endDT   = DateTime::createFromFormat("H:i", $end);
@@ -38,15 +38,33 @@ if ($endDT <= $startDT) {
 // 3. 最多 2 小時
 // =====================
 $diff = ($endDT->getTimestamp() - $startDT->getTimestamp()) / 3600;
-
 if ($diff > 2) {
     die("一次最多只能預約 2 小時");
 }
 
 // =====================
+// ⭐ 新增規則：必須在當週週一 00:00 後才能預約
+// =====================
+$now = new DateTime(); // 現在時間
+$targetDate = new DateTime($date); // 使用者想預約的日期
+
+// 計算該日期所屬週的週一 00:00
+// 'monday this week' 會自動根據該日期找出當週的週一
+$targetMonday = clone $targetDate;
+if ($targetDate->format('N') != 1) { // 如果選的不是週一，就找這週的週一
+    $targetMonday->modify('monday this week');
+}
+$targetMonday->setTime(0, 0, 0); // 設定為 00:00:00
+
+// 檢查現在時間是否小於該週週一 00:00
+if ($now < $targetMonday) {
+    die("預約失敗：該週時段必須在 " . $targetMonday->format('Y-m-d 00:00') . " 之後才開放預約！");
+}
+
+
+// =====================
 // ⭐ 核心安全機制：獲取排隊鎖 (防止多人同時預約衝突)
 // =====================
-// 鎖定名為 'booking_lock' 的資源，最多等候 5 秒
 $lock_query = $conn->query("SELECT GET_LOCK('booking_lock', 5) AS locked");
 $lock_row = $lock_query->fetch_assoc();
 
@@ -56,7 +74,7 @@ if (!$lock_row || $lock_row['locked'] != 1) {
 
 try {
     // =====================
-    // 4. 防重疊 (在鎖定狀態下檢查，絕對安全)
+    // 4. 防重疊 
     // =====================
     $stmt = $conn->prepare("
         SELECT id FROM bookings
@@ -76,7 +94,7 @@ try {
     }
 
     // =====================
-    // 5. ⭐ 送出時間（台北時區）
+    // 5. 送出時間
     // =====================
     $created_at = date("Y-m-d H:i:s");
 
@@ -100,9 +118,6 @@ try {
     }
 
 } finally {
-    // =====================
-    // ⭐ 無論成功或失敗，最後一定要釋放鎖，讓下一個人可以使用
-    // =====================
     $conn->query("SELECT RELEASE_LOCK('booking_lock')");
     $conn->close();
 }
