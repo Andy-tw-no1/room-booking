@@ -1,9 +1,6 @@
 <?php
 include "db.php";
 
-// 刪除過期資料
-$conn->query("DELETE FROM bookings WHERE CONCAT(date,' ',end_time) < NOW()");
-
 // 查詢（依時間排序）
 $result = $conn->query("SELECT * FROM bookings ORDER BY date ASC, start_time ASC");
 ?>
@@ -58,15 +55,19 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY date ASC, start_time ASC
 </tr>
 
 <?php
-while($row = $result->fetch_assoc()) {
-    echo "<tr>
-        <td>{$row['user']}</td>
-        <td>{$row['band_name']}</td>
-        <td>{$row['date']}</td>
-        <td>{$row['start_time']}</td>
-        <td>{$row['end_time']}</td>
-        <td>{$row['created_at']}</td>
-    </tr>";
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        echo "<tr>
+            <td>" . htmlspecialchars($row['user']) . "</td>
+            <td>" . htmlspecialchars($row['band_name']) . "</td>
+            <td>" . htmlspecialchars($row['date']) . "</td>
+            <td>" . htmlspecialchars($row['start_time']) . "</td>
+            <td>" . htmlspecialchars($row['end_time']) . "</td>
+            <td>" . htmlspecialchars($row['created_at']) . "</td>
+        </tr>";
+    }
+} else {
+    echo "<tr><td colspan='6'>目前沒有任何預約紀錄</td></tr>";
 }
 ?>
 
