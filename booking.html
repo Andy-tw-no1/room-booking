@@ -19,6 +19,11 @@
             padding: 6px 12px;
             cursor: pointer;
         }
+
+        #preview {
+            color: #333;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -53,19 +58,15 @@ updateTime();
 
 
 // =====================
-// 限制不能選過去日期
-// =====================
-window.onload = function () {
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("dateInput").min = today;
-};
-
-
-// =====================
-// 即時預覽
+// DOM ready（修正你原本 bug）
 // =====================
 document.addEventListener("DOMContentLoaded", function () {
 
+    // 限制不能選過去日期
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("dateInput").min = today;
+
+    // 即時預覽
     document.querySelector("form").addEventListener("input", function () {
 
         const date = document.querySelector("[name=date]").value;
@@ -84,6 +85,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     使用者：
     <input type="text" name="user" required>
+    <br><br>
+
+    團名：
+    <input type="text" name="band_name" required>
     <br><br>
 
     日期：
