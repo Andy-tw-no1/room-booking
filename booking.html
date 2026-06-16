@@ -1,113 +1,174 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>屏大熱音團室預約系統</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>填寫預約 - 屏大熱音</title>
     <style>
         body {
-            font-family: Arial;
-            margin: 20px;
+            background: #0d0714;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 30px 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-
+        .wrapper {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h2 {
+            margin-top: 0;
+            color: #ff007f;
+            text-shadow: 0 0 10px rgba(255,0,127,0.5);
+            text-align: center;
+        }
+        #nowTime {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #00ffff;
+            margin-bottom: 25px;
+            background: rgba(0,255,255,0.1);
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 0.95rem;
+        }
         input {
-            padding: 6px;
-            margin: 5px 0;
+            width: 100%;
+            padding: 12px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: all 0.3s;
         }
-
-        button {
-            padding: 6px 12px;
-            cursor: pointer;
+        input:focus {
+            outline: none;
+            border-color: #ff007f;
+            box-shadow: 0 0 10px rgba(255,0,127,0.4);
         }
-
         #preview {
-            color: #333;
+            background: rgba(255,255,255,0.05);
+            border-left: 4px solid #7f00ff;
+            padding: 12px;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            margin: 25px 0;
+            min-height: 20px;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(45deg, #ff007f, #7f00ff);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
             font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255,0,127,0.4);
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+        .btn-back {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .btn-back:hover {
+            color: #fff;
         }
     </style>
 </head>
-
 <body>
 
-<h2>團室預約系統</h2>
+<div class="wrapper">
+    <h2>團室預約系統</h2>
+    <div id="nowTime">目前時間：載入中...</div>
 
-<h3 id="nowTime"></h3>
+    <form action="book.php" method="POST">
+        <div class="form-group">
+            <label>使用者姓名</label>
+            <input type="text" name="user" placeholder="請輸入您的姓名" required>
+        </div>
+
+        <div class="form-group">
+            <label>樂團名稱</label>
+            <input type="text" name="band_name" placeholder="請輸入團名" required>
+        </div>
+
+        <div class="form-group">
+            <label>預約日期 (週一00:00開放當週)</label>
+            <input type="date" name="date" required id="dateInput">
+        </div>
+
+        <div class="form-group">
+            <label>開始時間 (以每半小時為單位)</label>
+            <input type="time" name="start" step="1800" required>
+        </div>
+
+        <div class="form-group">
+            <label>結束時間 (最多2小時)</label>
+            <input type="time" name="end" step="1800" required>
+        </div>
+
+        <div id="preview">填寫欄位以預覽預約時段...</div>
+
+        <button type="submit" class="btn-submit">送出預約</button>
+    </form>
+    
+    <a href="index.html" class="btn-back">返回首頁</a>
+</div>
 
 <script>
-// =====================
-// 即時時間
-// =====================
-function updateTime()
-{
+function updateTime() {
     const now = new Date();
-
     const y = now.getFullYear();
     const m = String(now.getMonth()+1).padStart(2,'0');
     const d = String(now.getDate()).padStart(2,'0');
-
     const h = String(now.getHours()).padStart(2,'0');
     const i = String(now.getMinutes()).padStart(2,'0');
     const s = String(now.getSeconds()).padStart(2,'0');
-
-    document.getElementById("nowTime").innerHTML =
-        `目前時間：${y}-${m}-${d} ${h}:${i}:${s}`;
+    document.getElementById("nowTime").innerHTML = `目前時間：${y}-${m}-${d} ${h}:${i}:${s}`;
 }
-
 setInterval(updateTime,1000);
 updateTime();
 
-
-// =====================
-// DOM ready（修正你原本 bug）
-// =====================
 document.addEventListener("DOMContentLoaded", function () {
-
-    // 限制不能選過去日期
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("dateInput").min = today;
 
-    // 即時預覽
     document.querySelector("form").addEventListener("input", function () {
-
-        const date = document.querySelector("[name=date]").value;
-        const start = document.querySelector("[name=start]").value;
-        const end = document.querySelector("[name=end]").value;
-
-        document.getElementById("preview").innerText =
-            `預約：${date} ${start} ~ ${end}`;
+        const date = document.querySelector("[name=date]").value || "----(--)---";
+        const start = document.querySelector("[name=start]").value || "--:--";
+        const end = document.querySelector("[name=end]").value || "--:--";
+        document.getElementById("preview").innerText = `確認預約：${date} ${start} ~ ${end}`;
     });
 });
 </script>
-
-<hr>
-
-<form action="book.php" method="POST">
-
-    使用者：
-    <input type="text" name="user" required>
-    <br><br>
-
-    團名：
-    <input type="text" name="band_name" required>
-    <br><br>
-
-    日期：
-    <input type="date" name="date" required id="dateInput">
-    <br><br>
-
-    開始時間：
-    <input type="time" name="start" step="1800" required>
-    <br><br>
-
-    結束時間：
-    <input type="time" name="end" step="1800" required>
-    <br><br>
-
-    <p id="preview"></p>
-
-    <button type="submit">預約</button>
-
-</form>
-
 </body>
 </html>
