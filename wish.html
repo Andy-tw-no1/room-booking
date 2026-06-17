@@ -17,7 +17,7 @@
         }
         .wrapper {
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
             background: rgba(255, 255, 255, 0.05);
             padding: 30px;
             border-radius: 12px;
@@ -134,7 +134,8 @@
     <div class="notice">
         📋 請填寫下週想練團的時段志願（最多5個）<br>
         ⏰ 每週日 21:00 截止，21:10 公布結果<br>
-        🎯 系統將自動分配，每團最多得標 1 個時段
+        🎯 系統將自動分配，每團最多得標 1 個時段<br>
+        🕐 開始時間為整點，時長 1 或 2 小時
     </div>
 
     <form action="submit_wish.php" method="POST">
@@ -147,6 +148,7 @@
             <input type="text" name="band_name" placeholder="請輸入團名" required>
         </div>
 
+        <!-- 第1志願 -->
         <div class="wish-block">
             <div class="wish-title">第 1 志願</div>
             <div class="form-row">
@@ -155,12 +157,20 @@
                     <input type="date" name="wish1_date" required class="date-input">
                 </div>
                 <div class="form-group">
-                    <label>時段</label>
-                    <select name="wish1_start" required id="wish1_start"></select>
+                    <label>開始時間</label>
+                    <select name="wish1_start" id="wish1_start" required></select>
+                </div>
+                <div class="form-group">
+                    <label>時長</label>
+                    <select name="wish1_duration" required>
+                        <option value="1">1 小時</option>
+                        <option value="2">2 小時</option>
+                    </select>
                 </div>
             </div>
         </div>
 
+        <!-- 第2志願 -->
         <div class="wish-block">
             <div class="wish-title">第 2 志願（選填）</div>
             <div class="form-row">
@@ -169,12 +179,21 @@
                     <input type="date" name="wish2_date" class="date-input">
                 </div>
                 <div class="form-group">
-                    <label>時段</label>
+                    <label>開始時間</label>
                     <select name="wish2_start" id="wish2_start"></select>
+                </div>
+                <div class="form-group">
+                    <label>時長</label>
+                    <select name="wish2_duration">
+                        <option value="">不填</option>
+                        <option value="1">1 小時</option>
+                        <option value="2">2 小時</option>
+                    </select>
                 </div>
             </div>
         </div>
 
+        <!-- 第3志願 -->
         <div class="wish-block">
             <div class="wish-title">第 3 志願（選填）</div>
             <div class="form-row">
@@ -183,12 +202,21 @@
                     <input type="date" name="wish3_date" class="date-input">
                 </div>
                 <div class="form-group">
-                    <label>時段</label>
+                    <label>開始時間</label>
                     <select name="wish3_start" id="wish3_start"></select>
+                </div>
+                <div class="form-group">
+                    <label>時長</label>
+                    <select name="wish3_duration">
+                        <option value="">不填</option>
+                        <option value="1">1 小時</option>
+                        <option value="2">2 小時</option>
+                    </select>
                 </div>
             </div>
         </div>
 
+        <!-- 第4志願 -->
         <div class="wish-block">
             <div class="wish-title">第 4 志願（選填）</div>
             <div class="form-row">
@@ -197,12 +225,21 @@
                     <input type="date" name="wish4_date" class="date-input">
                 </div>
                 <div class="form-group">
-                    <label>時段</label>
+                    <label>開始時間</label>
                     <select name="wish4_start" id="wish4_start"></select>
+                </div>
+                <div class="form-group">
+                    <label>時長</label>
+                    <select name="wish4_duration">
+                        <option value="">不填</option>
+                        <option value="1">1 小時</option>
+                        <option value="2">2 小時</option>
+                    </select>
                 </div>
             </div>
         </div>
 
+        <!-- 第5志願 -->
         <div class="wish-block">
             <div class="wish-title">第 5 志願（選填）</div>
             <div class="form-row">
@@ -211,8 +248,16 @@
                     <input type="date" name="wish5_date" class="date-input">
                 </div>
                 <div class="form-group">
-                    <label>時段</label>
+                    <label>開始時間</label>
                     <select name="wish5_start" id="wish5_start"></select>
+                </div>
+                <div class="form-group">
+                    <label>時長</label>
+                    <select name="wish5_duration">
+                        <option value="">不填</option>
+                        <option value="1">1 小時</option>
+                        <option value="2">2 小時</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -237,26 +282,16 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
-// 產生時段選單
 function buildTimeOptions(selectId, required) {
     const select = document.getElementById(selectId);
-    if (!required) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.text = "請選擇（可不填）";
-        select.appendChild(opt);
-    } else {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.text = "請選擇";
-        select.appendChild(opt);
-    }
+    const defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.text = required ? "請選擇" : "請選擇（可不填）";
+    select.appendChild(defaultOpt);
     for (let h = 9; h <= 21; h++) {
         const opt = document.createElement("option");
-        const start = String(h).padStart(2,'0') + ":00";
-        const end = String(h+1).padStart(2,'0') + ":00";
-        opt.value = start;
-        opt.text = `${start} ~ ${end}`;
+        opt.value = String(h).padStart(2,'0') + ":00";
+        opt.text = String(h).padStart(2,'0') + ":00";
         select.appendChild(opt);
     }
 }
@@ -267,7 +302,6 @@ buildTimeOptions("wish3_start", false);
 buildTimeOptions("wish4_start", false);
 buildTimeOptions("wish5_start", false);
 
-// 限制只能選下週日期
 document.addEventListener("DOMContentLoaded", function () {
     const today = new Date();
     const dayOfWeek = today.getDay();
