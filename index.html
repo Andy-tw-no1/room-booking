@@ -39,10 +39,17 @@
             margin-bottom: 40px;
             font-size: 1rem;
         }
+        .section-label {
+            color: #888;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 20px 0 10px;
+        }
         .btn-group {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
         .btn {
             background: transparent;
@@ -66,6 +73,15 @@
             box-shadow: 0 0 25px rgba(255, 0, 127, 0.6);
             transform: translateY(-3px);
         }
+        .btn-wish {
+            border-color: #7f00ff;
+            box-shadow: 0 0 15px rgba(127, 0, 255, 0.2);
+        }
+        .btn-wish:hover {
+            background: #7f00ff;
+            box-shadow: 0 0 25px rgba(127, 0, 255, 0.6);
+            transform: translateY(-3px);
+        }
         .btn-view {
             border-color: #00ffff;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
@@ -76,19 +92,41 @@
             box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
             transform: translateY(-3px);
         }
+        .btn-result {
+            border-color: #00ff99;
+            box-shadow: 0 0 15px rgba(0, 255, 153, 0.2);
+        }
+        .btn-result:hover {
+            background: #00ff99;
+            color: #000;
+            box-shadow: 0 0 25px rgba(0, 255, 153, 0.6);
+            transform: translateY(-3px);
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
-
 <div class="container">
     <h1>屏大熱音團室預約</h1>
     <p>Nptu_hotmusic</p>
-    
+
+    <div class="section-label">本週即時預約</div>
     <div class="btn-group">
         <a href="booking.html" class="btn btn-booking">進入預約系統</a>
-        <a href="view.php" class="btn btn-view">查看所有預約</a>
+        <a href="view.php" class="btn btn-view">查看本週預約</a>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">下週志願登記（週日 21:00 截止）</div>
+    <div class="btn-group">
+        <a href="wish.html" class="btn btn-wish">填寫下週志願</a>
+        <a href="result.php" class="btn btn-result">查看分配結果</a>
     </div>
 </div>
-
 </body>
 </html>
