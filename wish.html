@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>填寫下週志願 - 屏大熱音</title>
+    <style>
+        body {
+            background: #0d0714;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 30px 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .wrapper {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h2 {
+            margin-top: 0;
+            color: #7f00ff;
+            text-shadow: 0 0 10px rgba(127,0,255,0.5);
+            text-align: center;
+        }
+        #nowTime {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #00ffff;
+            margin-bottom: 25px;
+            background: rgba(0,255,255,0.1);
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .wish-block {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .wish-title {
+            color: #7f00ff;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        .form-group {
+            flex: 1;
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #ccc;
+            font-size: 0.85rem;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #7f00ff;
+            box-shadow: 0 0 10px rgba(127,0,255,0.4);
+        }
+        select option {
+            background: #1a0a2e;
+        }
+        .form-group-full {
+            margin-bottom: 20px;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(45deg, #7f00ff, #ff007f);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(127,0,255,0.4);
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+        .btn-back {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .btn-back:hover { color: #fff; }
+        .notice {
+            background: rgba(127,0,255,0.1);
+            border-left: 4px solid #7f00ff;
+            padding: 10px 14px;
+            border-radius: 4px;
+            color: #ccc;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <h2>下週志願登記</h2>
+    <div id="nowTime">目前時間：載入中...</div>
+
+    <div class="notice">
+        📋 請填寫下週想練團的時段志願（最多5個）<br>
+        ⏰ 每週日 21:00 截止，21:10 公布結果<br>
+        🎯 系統將自動分配，每團最多得標 1 個時段
+    </div>
+
+    <form action="submit_wish.php" method="POST">
+        <div class="form-group-full">
+            <label>使用者姓名</label>
+            <input type="text" name="user" placeholder="請輸入您的姓名" required>
+        </div>
+        <div class="form-group-full">
+            <label>樂團名稱</label>
+            <input type="text" name="band_name" placeholder="請輸入團名" required>
+        </div>
+
+        <?php for ($i = 1; $i <= 5; $i++): ?>
+        <div class="wish-block">
+            <div class="wish-title">第 <?= $i ?> 志願<?= $i > 1 ? '（選填）' : '' ?></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" name="wish<?= $i ?>_date" <?= $i == 1 ? 'required' : '' ?> class="date-input">
+                </div>
+                <div class="form-group">
+                    <label>時段</label>
+                    <select name="wish<?= $i ?>_start" <?= $i == 1 ? 'required' : '' ?>>
+                        <option value="">請選擇</option>
+                        <?php for ($h = 9; $h <= 21; $h++): ?>
+                        <option value="<?= sprintf('%02d:00', $h) ?>">
+                            <?= sprintf('%02d:00 ~ %02d:00', $h, $h+1) ?>
+                        </option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <?php endfor; ?>
+
+        <button type="submit" class="btn-submit">送出志願</button>
+    </form>
+
+    <a href="index.html" class="btn-back">返回首頁</a>
+</div>
+
+<script>
+function updateTime() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const d = String(now.getDate()).padStart(2,'0');
+    const h = String(now.getHours()).padStart(2,'0');
+    const i = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById("nowTime").innerHTML = `目前時間：${y}-${m}-${d} ${h}:${i}:${s}`;
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// 限制只能選下週日期
+document.addEventListener("DOMContentLoaded", function () {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=週日
+    const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + daysUntilNextMonday);
+    const nextSunday = new Date(nextMonday);
+    nextSunday.setDate(nextMonday.getDate() + 6);
+
+    const minDate = nextMonday.toISOString().split("T")[0];
+    const maxDate = nextSunday.toISOString().split("T")[0];
+
+    document.querySelectorAll(".date-input").forEach(input => {
+        input.min = minDate;
+        input.max = maxDate;
+    });
+});
+</script>
+</body>
+</html>
