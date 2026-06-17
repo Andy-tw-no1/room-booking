@@ -135,7 +135,7 @@
         📋 請填寫下週想練團的時段志願（最多5個）<br>
         ⏰ 每週日 21:00 截止，21:10 公布結果<br>
         🎯 系統將自動分配，每團最多得標 1 個時段<br>
-        🕐 開始時間為整點，時長 1 或 2 小時
+        🕐 開始時間為整點，時長 1 或 2 小時，最晚至 24:00
     </div>
 
     <form action="submit_wish.php" method="POST">
@@ -288,7 +288,7 @@ function buildTimeOptions(selectId, required) {
     defaultOpt.value = "";
     defaultOpt.text = required ? "請選擇" : "請選擇（可不填）";
     select.appendChild(defaultOpt);
-    for (let h = 9; h <= 21; h++) {
+    for (let h = 9; h <= 22; h++) {
         const opt = document.createElement("option");
         opt.value = String(h).padStart(2,'0') + ":00";
         opt.text = String(h).padStart(2,'0') + ":00";
