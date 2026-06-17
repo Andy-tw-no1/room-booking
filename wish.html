@@ -147,28 +147,75 @@
             <input type="text" name="band_name" placeholder="請輸入團名" required>
         </div>
 
-        <?php for ($i = 1; $i <= 5; $i++): ?>
         <div class="wish-block">
-            <div class="wish-title">第 <?= $i ?> 志願<?= $i > 1 ? '（選填）' : '' ?></div>
+            <div class="wish-title">第 1 志願</div>
             <div class="form-row">
                 <div class="form-group">
                     <label>日期</label>
-                    <input type="date" name="wish<?= $i ?>_date" <?= $i == 1 ? 'required' : '' ?> class="date-input">
+                    <input type="date" name="wish1_date" required class="date-input">
                 </div>
                 <div class="form-group">
                     <label>時段</label>
-                    <select name="wish<?= $i ?>_start" <?= $i == 1 ? 'required' : '' ?>>
-                        <option value="">請選擇</option>
-                        <?php for ($h = 9; $h <= 21; $h++): ?>
-                        <option value="<?= sprintf('%02d:00', $h) ?>">
-                            <?= sprintf('%02d:00 ~ %02d:00', $h, $h+1) ?>
-                        </option>
-                        <?php endfor; ?>
-                    </select>
+                    <select name="wish1_start" required id="wish1_start"></select>
                 </div>
             </div>
         </div>
-        <?php endfor; ?>
+
+        <div class="wish-block">
+            <div class="wish-title">第 2 志願（選填）</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" name="wish2_date" class="date-input">
+                </div>
+                <div class="form-group">
+                    <label>時段</label>
+                    <select name="wish2_start" id="wish2_start"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="wish-block">
+            <div class="wish-title">第 3 志願（選填）</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" name="wish3_date" class="date-input">
+                </div>
+                <div class="form-group">
+                    <label>時段</label>
+                    <select name="wish3_start" id="wish3_start"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="wish-block">
+            <div class="wish-title">第 4 志願（選填）</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" name="wish4_date" class="date-input">
+                </div>
+                <div class="form-group">
+                    <label>時段</label>
+                    <select name="wish4_start" id="wish4_start"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="wish-block">
+            <div class="wish-title">第 5 志願（選填）</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" name="wish5_date" class="date-input">
+                </div>
+                <div class="form-group">
+                    <label>時段</label>
+                    <select name="wish5_start" id="wish5_start"></select>
+                </div>
+            </div>
+        </div>
 
         <button type="submit" class="btn-submit">送出志願</button>
     </form>
@@ -190,10 +237,40 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
+// 產生時段選單
+function buildTimeOptions(selectId, required) {
+    const select = document.getElementById(selectId);
+    if (!required) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.text = "請選擇（可不填）";
+        select.appendChild(opt);
+    } else {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.text = "請選擇";
+        select.appendChild(opt);
+    }
+    for (let h = 9; h <= 21; h++) {
+        const opt = document.createElement("option");
+        const start = String(h).padStart(2,'0') + ":00";
+        const end = String(h+1).padStart(2,'0') + ":00";
+        opt.value = start;
+        opt.text = `${start} ~ ${end}`;
+        select.appendChild(opt);
+    }
+}
+
+buildTimeOptions("wish1_start", true);
+buildTimeOptions("wish2_start", false);
+buildTimeOptions("wish3_start", false);
+buildTimeOptions("wish4_start", false);
+buildTimeOptions("wish5_start", false);
+
 // 限制只能選下週日期
 document.addEventListener("DOMContentLoaded", function () {
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0=週日
+    const dayOfWeek = today.getDay();
     const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
     const nextMonday = new Date(today);
     nextMonday.setDate(today.getDate() + daysUntilNextMonday);
