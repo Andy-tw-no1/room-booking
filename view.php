@@ -1,6 +1,11 @@
 <?php
 include "db.php";
-$result = $conn->query("SELECT * FROM bookings ORDER BY date ASC, start_time ASC");
+
+// 方案一：使用 SQL 自動過濾掉已過期的預約（以當前系統日期與時間為準）
+$result = $conn->query("SELECT * FROM bookings 
+                        WHERE date > CURDATE() 
+                        OR (date = CURDATE() AND end_time >= CURTIME()) 
+                        ORDER BY date ASC, start_time ASC");
 ?>
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -111,7 +116,7 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY date ASC, start_time ASC
             </thead>
             <tbody>
                 <?php
-                if ($result->num_rows > 0) {
+                if ($result && $result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
                         echo "<tr>
                             <td>" . htmlspecialchars($row['user']) . "</td>
@@ -123,7 +128,7 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY date ASC, start_time ASC
                         </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何預約紀錄</td></tr>";
+                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何有效預約紀錄</td></tr>";
                 }
                 ?>
             </tbody>
