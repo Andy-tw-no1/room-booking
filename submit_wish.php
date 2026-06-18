@@ -8,7 +8,6 @@ date_default_timezone_set("Asia/Taipei");
 $now = new DateTime();
 $dayOfWeek = (int)$now->format('N');
 $hour = (int)$now->format('H');
-$minute = (int)$now->format('i');
 
 if ($dayOfWeek == 7 && $hour >= 21) {
     die("志願登記已截止（每週日 21:00 截止）");
@@ -38,17 +37,21 @@ for ($i = 1; $i <= 5; $i++) {
     $duration = isset($_POST["wish{$i}_duration"]) ? trim($_POST["wish{$i}_duration"]) : "";
 
     if (!empty($date) && !empty($start) && !empty($duration)) {
-        // 計算結束時間
         $startDT = DateTime::createFromFormat("H:i", $start);
-        $endDT   = clone $startDT;
-        $endDT->modify("+{$duration} hour");
+        if (!$startDT) {
+            die("第 {$i} 志願時間格式錯誤");
+        }
 
-        // 若結束時間超過 24:00 則拒絕
-        $endHour = (int)$endDT->format('H');
         $startHour = (int)$startDT->format('H');
-        if ($endHour < $startHour || ($endHour == 0 && $startHour != 22)) {
+        $dur       = (int)$duration;
+
+        // 檢查結束時間不超過 24:00
+        if ($startHour + $dur > 24) {
             die("第 {$i} 志願結束時間不可超過 24:00");
         }
+
+        $endDT = clone $startDT;
+        $endDT->modify("+{$dur} hour");
 
         $wishes[] = [
             "date"  => $date,
