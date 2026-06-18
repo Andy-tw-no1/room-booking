@@ -2,205 +2,164 @@
 include "db.php";
 date_default_timezone_set("Asia/Taipei");
 
-// 計算下週範圍（保留給網頁標題與排班時間範圍對照使用）
+// =====================
+// 安全驗證：保留金鑰手動觸發機制
+// =====================
 $now = new DateTime();
+$secret = $_GET["secret"] ?? "";
+$allowedByKey = ($secret === "hotmusic2025");
+
+if (!$allowedByKey) {
+    die("未授權的執行請求。");
+}
+
+// ==========================================
+// 【新邏輯】動態計算「下週」的精準日期範圍
+// ==========================================
 $dayOfWeekToday = (int)$now->format('N');
 $daysUntilNextMonday = $dayOfWeekToday === 7 ? 1 : 8 - $dayOfWeekToday;
+
 $nextMonday = clone $now;
 $nextMonday->modify("+{$daysUntilNextMonday} days");
 $nextMonday->setTime(0, 0, 0);
+
 $nextSunday = clone $nextMonday;
 $nextSunday->modify("+6 days");
+$nextSunday->setTime(23, 59, 59);
 
-// ==========================================
-// 【核心修正】改用「最新排班時間戳記」來撈取資料
-// ==========================================
-// 1. 先找出 allocations 表裡最新一次排班的寫入時間 (created_at)
-$latest_query = $conn->query("SELECT MAX(created_at) as last_run FROM allocations");
-$latest_run = $latest_query->fetch_assoc()['last_run'] ?? '';
+$allowed_start = $nextMonday->format("Y-m-d"); // 下週一的日期
+$allowed_end   = $nextSunday->format("Y-m-d"); // 下週日的日期
 
-// 2. 只要是同一批寫入的資料，不論成功失敗，一概完整撈出
-$result = null;
-if (!empty($latest_run)) {
-    $result = $conn->query("
-        SELECT * FROM allocations 
-        WHERE created_at = '$latest_run'
-        ORDER BY (date IS NULL) ASC, date ASC, start_time ASC
-    ");
+
+// =====================
+// 1. 執行前，先清空上一次的分配結果
+// =====================
+$conn->query("TRUNCATE TABLE allocations");
+
+// 2. 取得目前所有的志願（依送出時間排序）
+$result = $conn->query("SELECT * FROM wishes ORDER BY created_at ASC");
+
+$wishes = [];
+while ($row = $result->fetch_assoc()) {
+    $wishes[] = $row;
 }
+
+// =====================
+// 3. 分配邏輯：志願序優先於送出時間
+// =====================
+$allocated = []; // 已分配的時段 ["date_start" => true]
+$results   = []; // 最終分配結果 ["wish_id" => [結果資料]]
+
+// 先將所有團初始化為「未分配狀態 (null)」
+foreach ($wishes as $wish) {
+    $results[$wish["id"]] = [
+        "wish_id"   => $wish["id"],
+        "user"      => $wish["user"],
+        "band_name" => $wish["band_name"],
+        "date"      => null,
+        "start_time"=> null,
+        "end_time"  => null,
+    ];
+}
+
+// 外迴圈：縱向跑 1 到 5 志願
+for ($v = 1; $v <= 5; $v++) {
+    
+    // 內迴圈：橫向依填寫順序（先搶先贏）處理每一團
+    foreach ($wishes as $wish) {
+        $wishId = $wish["id"];
+
+        // 如果這一團在前面的志願序已經分配成功，就直接跳過
+        if ($results[$wishId]["date"] !== null) {
+            continue;
+        }
+
+        $date  = $wish["wish{$v}_date"];
+        $start = $wish["wish{$v}_start"];
+
+        // 如果該志願欄位是空的，換下一團
+        if (empty($date) || empty($start)) continue;
+
+        // 【關鍵修正】強制檢查：如果填寫的日期不在下週範圍內，直接踢掉這個志願！
+        if ($date < $allowed_start || $date > $allowed_end) {
+            continue; 
+        }
+
+        // 標準化時間格式
+        $startDT = DateTime::createFromFormat("H:i:s", $start) ?: DateTime::createFromFormat("H:i", $start);
+        if (!$startDT) continue;
+        
+        // 計算結束時間（+1小時）
+        $endDT = clone $startDT;
+        $endDT->modify("+1 hour");
+
+        // 時段唯一 Key
+        $key = $date . "_" . $startDT->format("H:i:s");
+
+        // 檢查這個時段有沒有被前面的人佔用
+        if (!isset($allocated[$key])) {
+            // 時段有空，分配成功！
+            $allocated[$key] = true;
+            
+            // 更新這一團的分配結果
+            $results[$wishId]["date"]       = $date;
+            $results[$wishId]["start_time"] = $startDT->format("H:i:s");
+            $results[$wishId]["end_time"]   = $endDT->format("H:i:s");
+        }
+    }
+}
+
+// =====================
+// 4. 寫入本次的分配結果（完美相容 MySQL 嚴格模式）
+// =====================
+$created_at = $now->format("Y-m-d H:i:s");
+$success = 0;
+$fail = 0;
+
+foreach ($results as $r) {
+    $db_date  = $r["date"];
+    $db_start = $r["start_time"];
+    $db_end   = $r["end_time"];
+
+    $stmt = $conn->prepare("
+        INSERT INTO allocations (wish_id, user, band_name, date, start_time, end_time, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
+    $stmt->bind_param(
+        "issssss",
+        $r["wish_id"],
+        $r["user"],
+        $r["band_name"],
+        $db_date,
+        $db_start,
+        $db_end,
+        $created_at
+    );
+    $stmt->execute();
+    $stmt->close();
+
+    if ($r["date"] !== null) {
+        $success++;
+    } else {
+        $fail++;
+    }
+}
+
+// =====================
+// 5. 確定分配成功並寫入 allocations 後，最後一步才清空 wishes
+// =====================
+$conn->query("TRUNCATE TABLE wishes");
+
+// =====================
+// 6. 輸出執行結果畫面
+// =====================
+echo "<h3>排班與資料清理完成！</h3>";
+echo "<strong>機制：</strong> 志願序絕對優先（安全機制：強制過濾非下週範圍志願）<br>";
+echo "<strong>本次有效下週區間：</strong> {$allowed_start} ~ {$allowed_end}<br><br>";
+echo "本次成功分配：<span style='color: green; font-weight: bold;'>{$success}</span> 團<br>";
+echo "本次未能分配：<span style='color: red; font-weight: bold;'>{$fail}</span> 團（包含日期不符者）<br><br>";
+echo "<strong>狀態：</strong> 歷史分配已成功更新至 allocations 表，wishes 原始填寫表已安全清空。<br>";
+echo "<strong>執行時間：</strong> {$created_at}";
+
+$conn->close();
 ?>
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分配結果 - 屏大熱音</title>
-    <style>
-        body {
-            background: #0d0714;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            padding: 30px 20px;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 900px;
-        }
-        h2 {
-            color: #00ff99;
-            text-shadow: 0 0 10px rgba(0,255,153,0.4);
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        .week-range {
-            text-align: center;
-            color: #888;
-            margin-bottom: 25px;
-            font-size: 0.9rem;
-        }
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            min-width: 600px;
-        }
-        th, td {
-            padding: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        th {
-            background: rgba(255, 255, 255, 0.07);
-            color: #00ff99;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
-        }
-        .status-ok {
-            color: #00ff99;
-            font-weight: bold;
-        }
-        .status-fail {
-            color: #ff4444;
-            font-weight: bold;
-        }
-        .no-data {
-            padding: 30px;
-            color: #888;
-        }
-        .notice {
-            background: rgba(0,255,153,0.05);
-            border-left: 4px solid #00ff99;
-            padding: 10px 14px;
-            border-radius: 4px;
-            color: #ccc;
-            font-size: 0.85rem;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
-        .action-group {
-            margin-top: 30px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-        .btn {
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        .btn:hover {
-            background: #fff;
-            color: #000;
-        }
-        .btn-primary {
-            background: #00ff99;
-            border-color: #00ff99;
-            color: #000;
-        }
-        .btn-primary:hover {
-            background: #00cc77;
-            color: #000;
-        }
-    </style>
-</head>
-<body>
-<div class="container">
-    <h2>下週團室分配結果</h2>
-    <div class="week-range">
-        <?= $nextMonday->format('Y-m-d') ?> ~ <?= $nextSunday->format('Y-m-d') ?>
-    </div>
-
-    <div class="notice">
-        ✅ 每週日 21:10 公布分配結果<br>
-        ❌ 若志願全部衝突，顯示「未能分配」，可使用本週即時預約系統登記
-    </div>
-
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th>使用者</th>
-                    <th>團名</th>
-                    <th>日期</th>
-                    <th>時段</th>
-                    <th>狀態</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                if ($result && $result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        if (!empty($row['date'])) {
-                            $start = substr($row['start_time'], 0, 5);
-                            $end   = substr($row['end_time'], 0, 5);
-                            echo "<tr>
-                                <td>" . htmlspecialchars($row['user']) . "</td>
-                                <td>" . htmlspecialchars($row['band_name']) . "</td>
-                                <td>" . htmlspecialchars($row['date']) . "</td>
-                                <td>{$start} ~ {$end}</td>
-                                <td class='status-ok'>✅ 已分配</td>
-                            </tr>";
-                        } else {
-                            echo "<tr>
-                                <td>" . htmlspecialchars($row['user']) . "</td>
-                                <td>" . htmlspecialchars($row['band_name']) . "</td>
-                                <td colspan='2' style='color:#888'>志願全部衝突</td>
-                                <td class='status-fail'>❌ 未能分配</td>
-                            </tr>";
-                        }
-                    }
-                } else {
-                    echo "<tr><td colspan='5' class='no-data'>結果尚未公布，請於週日 21:10 後查看</td></tr>";
-                }
-                ?>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="action-group">
-        <a href="index.html" class="btn">返回首頁</a>
-        <a href="wish.html" class="btn btn-primary">填寫志願</a>
-    </div>
-</div>
-</body>
-</html>
