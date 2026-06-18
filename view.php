@@ -3,7 +3,7 @@ include "db.php";
 date_default_timezone_set("Asia/Taipei");
 
 // 讀取自動分配結果（allocations），並自動過濾掉已過期的預約
-// 排除掉 date 為 null（代表當初分配失敗沒搶到時段）的資料
+// 排除掉 date 為 null（代表分配失敗沒搶到時段）的資料
 $result = $conn->query("SELECT * FROM allocations 
                         WHERE date IS NOT NULL 
                         AND (
@@ -105,7 +105,7 @@ $result = $conn->query("SELECT * FROM allocations
 <body>
 
 <div class="container">
-    <h2>下週團室預約名單</h2>
+    <h2>團室預約分配名單</h2>
 
     <div class="table-responsive">
         <table>
@@ -133,7 +133,7 @@ $result = $conn->query("SELECT * FROM allocations
                         </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何有效的排班預約紀錄</td></tr>";
+                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何有效的預約紀錄</td></tr>";
                 }
                 ?>
             </tbody>
@@ -142,7 +142,7 @@ $result = $conn->query("SELECT * FROM allocations
 
     <div class="action-group">
         <a href="index.html" class="btn">返回首頁</a>
-        <a href="booking.html" class="btn btn-primary">填寫下週志願</a>
+        <a href="booking.html" class="btn btn-primary">填寫預約志願</a>
     </div>
 </div>
 
