@@ -188,7 +188,7 @@ if (!empty($latest_run)) {
                             echo "<tr>
                                 <td>" . htmlspecialchars($row['user']) . "</td>
                                 <td>" . htmlspecialchars($row['band_name']) . "</td>
-                                <td colspan='2' style='color:#888'>志願全部衝突</td>
+                                <td colspan='2' style='color:#888'>志願全部衝突或不符合下週時段</td>
                                 <td class='status-fail'>❌ 未能分配</td>
                             </tr>";
                         }
