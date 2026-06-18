@@ -14,7 +14,7 @@ if (!$allowedByKey) {
 }
 
 // =====================
-// 【新邏輯】1. 執行前，才清空上一次的分配結果與本次要覆蓋的志願
+// 1. 執行前，先清空上一次的分配結果
 // =====================
 $conn->query("TRUNCATE TABLE allocations");
 
@@ -32,7 +32,7 @@ while ($row = $result->fetch_assoc()) {
 $allocated = []; // 已分配的時段 ["date_start" => true]
 $results   = []; // 最終分配結果 ["wish_id" => [結果資料]]
 
-// 先將所有團初始化為「未分配狀態」
+// 先將所有團初始化為「未分配狀態 (null)」
 foreach ($wishes as $wish) {
     $results[$wish["id"]] = [
         "wish_id"   => $wish["id"],
@@ -71,7 +71,7 @@ for ($v = 1; $v <= 5; $v++) {
         $endDT->modify("+1 hour");
 
         // 時段唯一 Key
-        $key = $date . "_" . $start;
+        $key = $date . "_" . $startDT->format("H:i:s");
 
         // 檢查這個時段有沒有被前面的人佔用
         if (!isset($allocated[$key])) {
@@ -87,7 +87,7 @@ for ($v = 1; $v <= 5; $v++) {
 }
 
 // =====================
-// 4. 寫入本次的分配結果
+// 4. 寫入本次的分配結果（完美相容 MySQL 嚴格模式）
 // =====================
 $created_at = $now->format("Y-m-d H:i:s");
 $success = 0;
@@ -99,10 +99,10 @@ $stmt = $conn->prepare("
 ");
 
 foreach ($results as $r) {
-    // 修正 NULL 報錯：若為 null 則帶入空字串
-    $db_date  = $r["date"] ?? "";
-    $db_start = $r["start_time"] ?? "";
-    $db_end   = $r["end_time"] ?? "";
+    // 保持原本的 null 狀態，直接傳進 bind_param，讓 PHP 自動轉成 SQL 的 NULL 寫入
+    $db_date  = $r["date"];
+    $db_start = $r["start_time"];
+    $db_end   = $r["end_time"];
 
     $stmt->bind_param(
         "issssss",
@@ -116,7 +116,7 @@ foreach ($results as $r) {
     );
     $stmt->execute();
 
-    if (!empty($r["date"])) {
+    if ($r["date"] !== null) {
         $success++;
     } else {
         $fail++;
@@ -124,18 +124,20 @@ foreach ($results as $r) {
 }
 $stmt->close();
 
-
 // =====================
-// 【新邏輯】5. 確定分配成功並寫入 allocations 後，這時候才清空 wishes
+// 5. 確定分配成功並寫入 allocations 後，最後一步才清空 wishes
 // =====================
 $conn->query("TRUNCATE TABLE wishes");
 
-
-echo "排班與資料清理完成！（機制：志願序絕對優先）<br>";
-echo "本次成功分配：{$success} 團<br>";
-echo "本次未能分配：{$fail} 團<br>";
-echo "狀態：歷史分配已更新，wishes 表已清空，開放下一輪填寫。<br>";
-echo "執行時間：{$created_at}";
+// =====================
+// 6. 輸出執行結果畫面
+// =====================
+echo "<h3>排班與資料清理完成！</h3>";
+echo "<strong>機制：</strong> 志願序絕對優先（嚴格模式相容版）<br><br>";
+echo "本次成功分配：<span style='color: green; font-weight: bold;'>{$success}</span> 團<br>";
+echo "本次未能分配：<span style='color: red; font-weight: bold;'>{$fail}</span> 團<br><br>";
+echo "<strong>狀態：</strong> 歷史分配已成功更新至 allocations 表，wishes 原始填寫表已安全清空。<br>";
+echo "<strong>執行時間：</strong> {$created_at}";
 
 $conn->close();
 ?>
