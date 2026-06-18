@@ -2,7 +2,7 @@
 include "db.php";
 date_default_timezone_set("Asia/Taipei");
 
-// 計算下週範圍
+// 計算下週範圍（保留給網頁標題與排班時間範圍對照使用）
 $now = new DateTime();
 $dayOfWeekToday = (int)$now->format('N');
 $daysUntilNextMonday = $dayOfWeekToday === 7 ? 1 : 8 - $dayOfWeekToday;
@@ -12,16 +12,22 @@ $nextMonday->setTime(0, 0, 0);
 $nextSunday = clone $nextMonday;
 $nextSunday->modify("+6 days");
 
-$weekStart = $nextMonday->format("Y-m-d");
-$weekEnd   = $nextSunday->format("Y-m-d");
+// ==========================================
+// 【核心修正】改用「最新排班時間戳記」來撈取資料
+// ==========================================
+// 1. 先找出 allocations 表裡最新一次排班的寫入時間 (created_at)
+$latest_query = $conn->query("SELECT MAX(created_at) as last_run FROM allocations");
+$latest_run = $latest_query->fetch_assoc()['last_run'] ?? '';
 
-// 取得分配結果
-$result = $conn->query("
-    SELECT * FROM allocations
-    WHERE date BETWEEN '$weekStart' AND '$weekEnd'
-    OR date IS NULL
-    ORDER BY date ASC, start_time ASC
-");
+// 2. 只要是同一批寫入的資料，不論成功失敗，一概完整撈出
+$result = null;
+if (!empty($latest_run)) {
+    $result = $conn->query("
+        SELECT * FROM allocations 
+        WHERE created_at = '$latest_run'
+        ORDER BY (date IS NULL) ASC, date ASC, start_time ASC
+    ");
+}
 ?>
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -164,7 +170,7 @@ $result = $conn->query("
                 <?php
                 if ($result && $result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
-                        if ($row['date']) {
+                        if (!empty($row['date'])) {
                             $start = substr($row['start_time'], 0, 5);
                             $end   = substr($row['end_time'], 0, 5);
                             echo "<tr>
