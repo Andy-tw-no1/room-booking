@@ -1,16 +1,6 @@
 <?php
 include "db.php";
-date_default_timezone_set("Asia/Taipei");
-
-// 讀取自動分配結果（allocations），並自動過濾掉已過期的預約
-// 排除掉 date 為 null（代表當初分配失敗沒搶到時段）的資料
-$result = $conn->query("SELECT * FROM allocations 
-                        WHERE date IS NOT NULL 
-                        AND (
-                            date > CURDATE() 
-                            OR (date = CURDATE() AND end_time >= CURTIME())
-                        )
-                        ORDER BY date ASC, start_time ASC");
+$result = $conn->query("SELECT * FROM bookings ORDER BY date ASC, start_time ASC");
 ?>
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -105,7 +95,7 @@ $result = $conn->query("SELECT * FROM allocations
 <body>
 
 <div class="container">
-    <h2>下週團室預約名單</h2>
+    <h2>團室預約名單</h2>
 
     <div class="table-responsive">
         <table>
@@ -116,12 +106,12 @@ $result = $conn->query("SELECT * FROM allocations
                     <th>日期</th>
                     <th>開始時間</th>
                     <th>結束時間</th>
-                    <th>分配時間</th>
+                    <th>登記時間</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                if ($result && $result->num_rows > 0) {
+                if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
                         echo "<tr>
                             <td>" . htmlspecialchars($row['user']) . "</td>
@@ -133,7 +123,7 @@ $result = $conn->query("SELECT * FROM allocations
                         </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何有效的排班預約紀錄</td></tr>";
+                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何預約紀錄</td></tr>";
                 }
                 ?>
             </tbody>
@@ -142,7 +132,7 @@ $result = $conn->query("SELECT * FROM allocations
 
     <div class="action-group">
         <a href="index.html" class="btn">返回首頁</a>
-        <a href="booking.html" class="btn btn-primary">填寫下週志願</a>
+        <a href="booking.html" class="btn btn-primary">我要預約</a>
     </div>
 </div>
 
