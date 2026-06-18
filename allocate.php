@@ -14,13 +14,11 @@ if (!$allowedByKey) {
 }
 
 // =====================
-// 1. 刪除上一次（所有歷史）的執行結果
+// 【新邏輯】1. 執行前，才清空上一次的分配結果與本次要覆蓋的志願
 // =====================
 $conn->query("TRUNCATE TABLE allocations");
 
-// =====================
 // 2. 取得目前所有的志願（依送出時間排序）
-// =====================
 $result = $conn->query("SELECT * FROM wishes ORDER BY created_at ASC");
 
 $wishes = [];
@@ -101,19 +99,24 @@ $stmt = $conn->prepare("
 ");
 
 foreach ($results as $r) {
+    // 修正 NULL 報錯：若為 null 則帶入空字串
+    $db_date  = $r["date"] ?? "";
+    $db_start = $r["start_time"] ?? "";
+    $db_end   = $r["end_time"] ?? "";
+
     $stmt->bind_param(
         "issssss",
         $r["wish_id"],
         $r["user"],
         $r["band_name"],
-        $r["date"],
-        $r["start_time"],
-        $r["end_time"],
+        $db_date,
+        $db_start,
+        $db_end,
         $created_at
     );
     $stmt->execute();
 
-    if ($r["date"]) {
+    if (!empty($r["date"])) {
         $success++;
     } else {
         $fail++;
@@ -121,16 +124,17 @@ foreach ($results as $r) {
 }
 $stmt->close();
 
+
 // =====================
-// 5. 分配並寫入完成後，立刻清空所有使用者的志願
+// 【新邏輯】5. 確定分配成功並寫入 allocations 後，這時候才清空 wishes
 // =====================
 $conn->query("TRUNCATE TABLE wishes");
 
 
-echo "強制排班與資料清理完成！（機制：志願序絕對優先）<br>";
+echo "排班與資料清理完成！（機制：志願序絕對優先）<br>";
 echo "本次成功分配：{$success} 團<br>";
 echo "本次未能分配：{$fail} 團<br>";
-echo "歷史分配記錄已清除，且使用者的志願皆已清空完畢，開放下週填寫。<br>";
+echo "狀態：歷史分配已更新，wishes 表已清空，開放下一輪填寫。<br>";
 echo "執行時間：{$created_at}";
 
 $conn->close();
