@@ -3,56 +3,25 @@ include "db.php";
 date_default_timezone_set("Asia/Taipei");
 
 // =====================
-// 安全驗證：只允許在週日 21:00~21:30 之間執行
-// 或帶上 secret key 手動觸發
+// 安全驗證：保留金鑰手動觸發機制
 // =====================
 $now = new DateTime();
-$dayOfWeek = (int)$now->format('N');
-$hour = (int)$now->format('H');
-$minute = (int)$now->format('i');
 $secret = $_GET["secret"] ?? "";
+$allowedByKey = ($secret === "hotmusic2025");
 
-$allowedByTime = ($dayOfWeek == 7 && $hour == 21 && $minute >= 0 && $minute <= 30);
-$allowedByKey  = ($secret === "hotmusic2025");
-
-if (!$allowedByTime && !$allowedByKey) {
-    die("不在允許執行的時間範圍內");
+if (!$allowedByKey) {
+    die("未授權的執行請求。");
 }
 
 // =====================
-// 計算下週範圍
+// 1. 刪除上一次（所有歷史）的執行結果
 // =====================
-$dayOfWeekToday = (int)$now->format('N');
-$daysUntilNextMonday = $dayOfWeekToday === 7 ? 1 : 8 - $dayOfWeekToday;
-$nextMonday = clone $now;
-$nextMonday->modify("+{$daysUntilNextMonday} days");
-$nextMonday->setTime(0, 0, 0);
-$nextSunday = clone $nextMonday;
-$nextSunday->modify("+6 days");
-$nextSunday->setTime(23, 59, 59);
-
-$weekStart = $nextMonday->format("Y-m-d");
-$weekEnd   = $nextSunday->format("Y-m-d");
+$conn->query("TRUNCATE TABLE allocations");
 
 // =====================
-// 清除本週舊的分配結果
+// 2. 取得目前所有的志願（依送出時間排序）
 // =====================
-$conn->query("DELETE FROM allocations WHERE date BETWEEN '$weekStart' AND '$weekEnd'");
-
-// =====================
-// 取得本週所有志願（依送出時間排序，越早越優先）
-// =====================
-$result = $conn->query("
-    SELECT * FROM wishes
-    WHERE (
-        wish1_date BETWEEN '$weekStart' AND '$weekEnd'
-        OR wish2_date BETWEEN '$weekStart' AND '$weekEnd'
-        OR wish3_date BETWEEN '$weekStart' AND '$weekEnd'
-        OR wish4_date BETWEEN '$weekStart' AND '$weekEnd'
-        OR wish5_date BETWEEN '$weekStart' AND '$weekEnd'
-    )
-    ORDER BY created_at ASC
-");
+$result = $conn->query("SELECT * FROM wishes ORDER BY created_at ASC");
 
 $wishes = [];
 while ($row = $result->fetch_assoc()) {
@@ -60,10 +29,10 @@ while ($row = $result->fetch_assoc()) {
 }
 
 // =====================
-// 分配邏輯
+// 分配邏輯（保持你原本的邏輯）
 // =====================
-$allocated = []; // 已分配的時段 ["date_start" => true]
-$results   = []; // 分配結果
+$allocated = []; 
+$results   = []; 
 
 foreach ($wishes as $wish) {
     $assigned = false;
@@ -74,19 +43,15 @@ foreach ($wishes as $wish) {
 
         if (empty($date) || empty($start)) continue;
 
-        // 計算結束時間（+1小時）
-        $startDT = DateTime::createFromFormat("H:i:s", $start);
-        if (!$startDT) {
-            $startDT = DateTime::createFromFormat("H:i", $start);
-        }
+        $startDT = DateTime::createFromFormat("H:i:s", $start) ?: DateTime::createFromFormat("H:i", $start);
+        if (!$startDT) continue;
+
         $endDT = clone $startDT;
         $endDT->modify("+1 hour");
-        $end = $endDT->format("H:i");
 
         $key = $date . "_" . $start;
 
         if (!isset($allocated[$key])) {
-            // 這個時段還沒被佔用，分配給這個團
             $allocated[$key] = true;
             $results[] = [
                 "wish_id"   => $wish["id"],
@@ -101,7 +66,6 @@ foreach ($wishes as $wish) {
         }
     }
 
-    // 如果五個志願都衝突，記錄為未分配
     if (!$assigned) {
         $results[] = [
             "wish_id"   => $wish["id"],
@@ -115,17 +79,18 @@ foreach ($wishes as $wish) {
 }
 
 // =====================
-// 寫入分配結果
+// 3. 寫入本次的分配結果
 // =====================
 $created_at = $now->format("Y-m-d H:i:s");
 $success = 0;
 $fail = 0;
 
+$stmt = $conn->prepare("
+    INSERT INTO allocations (wish_id, user, band_name, date, start_time, end_time, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+");
+
 foreach ($results as $r) {
-    $stmt = $conn->prepare("
-        INSERT INTO allocations (wish_id, user, band_name, date, start_time, end_time, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
     $stmt->bind_param(
         "issssss",
         $r["wish_id"],
@@ -144,10 +109,18 @@ foreach ($results as $r) {
         $fail++;
     }
 }
+$stmt->close();
 
-echo "分配完成！<br>";
-echo "成功分配：{$success} 團<br>";
-echo "未能分配：{$fail} 團<br>";
+// =====================
+// 4. 分配完成後，立刻清空所有使用者的志願
+// =====================
+$conn->query("TRUNCATE TABLE wishes");
+
+
+echo "強制排班與資料清理完成！<br>";
+echo "本次成功分配：{$success} 團<br>";
+echo "本次未能分配：{$fail} 團<br>";
+echo "歷史分配記錄已清除，且使用者的志願皆已清空完畢。<br>";
 echo "執行時間：{$created_at}";
 
 $conn->close();
