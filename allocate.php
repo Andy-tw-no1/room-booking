@@ -148,15 +148,41 @@ $stmt->close();
 $conn->query("TRUNCATE TABLE wishes");
 
 // =====================
-// 6. 輸出執行成果
+// 6. 輸出執行成果與一鍵導入按鈕
 // =====================
-echo "<h3>排班與資料清理完成！</h3>";
-echo "<strong>機制：</strong> 志願序絕對優先（安全機制：強制過濾非下週範圍志願）<br>";
-echo "<strong>本次有效下週區間：</strong> {$allowed_start} ~ {$allowed_end}<br><br>";
-echo "本次成功分配：<span style='color: green; font-weight: bold;'>{$success}</span> 團<br>";
-echo "本次未能分配：<span style='color: red; font-weight: bold;'>{$fail}</span> 團（包含日期不符或衝突者）<br><br>";
-echo "<strong>狀態：</strong> 分配結果已更新，wishes 表已清空。<br>";
-echo "<strong>執行時間：</strong> {$created_at}";
+?>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>排班系統後台 - 屏大熱音</title>
+    <style>
+        body { background: #0d0714; color: #fff; font-family: Arial, sans-serif; padding: 40px; text-align: center; }
+        .box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: left; line-height: 1.8; }
+        h3 { color: #00ff99; text-align: center; margin-top: 0; }
+        .btn-import { display: block; text-align: center; background: #00ffff; color: #000; padding: 14px 20px; text-decoration: none; font-weight: bold; border-radius: 6px; margin-top: 25px; box-shadow: 0 0 15px rgba(0,255,255,0.4); transition: all 0.2s; }
+        .btn-import:hover { background: #00cccc; box-shadow: 0 0 25px rgba(0,255,255,0.6); }
+        .btn-view { display: block; text-align: center; color: #888; text-decoration: none; margin-top: 15px; font-size: 0.9rem; }
+        .btn-view:hover { color: #fff; }
+    </style>
+</head>
+<body>
 
+<div class="box">
+    <h3>排班與資料清理完成！</h3>
+    <strong>排班機制：</strong> 志願序絕對優先（安全機制：強制過濾非下週範圍志願）<br>
+    <strong>下週有效區間：</strong> <span style="color: #00ff99; font-weight: bold;"><?= $allowed_start ?> ~ <?= $allowed_end ?></span><br><br>
+    本次成功分配：<span style="color: #00ff99; font-weight: bold;"><?= $success ?></span> 團<br>
+    本次未能分配：<span style="color: #ff4444; font-weight: bold;"><?= $fail ?></span> 團（包含日期不符或衝突者）<br><br>
+    <strong>資料庫狀態：</strong> 抽籤結果已暫存至 allocations 表，wishes 填寫表已安全清空。<br>
+    <strong>後台執行時間：</strong> <?= $created_at ?><br>
+
+    <a href="import_to_bookings.php?secret=hotmusic2025" class="btn-import">🚀 一鍵正式發布並導入預約課表 (bookings)</a>
+    <a href="result.php" target="_blank" class="btn-view">先在新視窗預覽分配結果 (result.php)</a>
+</div>
+
+</body>
+</html>
+<?php
 $conn->close();
 ?>
