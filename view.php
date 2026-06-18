@@ -1,6 +1,16 @@
 <?php
 include "db.php";
-$result = $conn->query("SELECT * FROM bookings ORDER BY date ASC, start_time ASC");
+date_default_timezone_set("Asia/Taipei");
+
+// 取得今天日期
+$today = date("Y-m-d");
+
+// 修正 SQL：只撈取日期大於或等於今天的預約紀錄
+$result = $conn->query("
+    SELECT * FROM bookings 
+    WHERE date >= '$today' 
+    ORDER BY date ASC, start_time ASC
+");
 ?>
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -111,7 +121,7 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY date ASC, start_time ASC
             </thead>
             <tbody>
                 <?php
-                if ($result->num_rows > 0) {
+                if ($result && $result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
                         echo "<tr>
                             <td>" . htmlspecialchars($row['user']) . "</td>
