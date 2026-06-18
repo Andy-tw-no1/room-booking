@@ -1,10 +1,15 @@
 <?php
 include "db.php";
+date_default_timezone_set("Asia/Taipei");
 
-// 方案一：使用 SQL 自動過濾掉已過期的預約（以當前系統日期與時間為準）
-$result = $conn->query("SELECT * FROM bookings 
-                        WHERE date > CURDATE() 
-                        OR (date = CURDATE() AND end_time >= CURTIME()) 
+// 讀取自動分配結果（allocations），並自動過濾掉已過期的預約
+// 排除掉 date 為 null（代表當初分配失敗沒搶到時段）的資料
+$result = $conn->query("SELECT * FROM allocations 
+                        WHERE date IS NOT NULL 
+                        AND (
+                            date > CURDATE() 
+                            OR (date = CURDATE() AND end_time >= CURTIME())
+                        )
                         ORDER BY date ASC, start_time ASC");
 ?>
 <!DOCTYPE html>
@@ -100,7 +105,7 @@ $result = $conn->query("SELECT * FROM bookings
 <body>
 
 <div class="container">
-    <h2>團室預約名單</h2>
+    <h2>下週團室預約名單</h2>
 
     <div class="table-responsive">
         <table>
@@ -111,7 +116,7 @@ $result = $conn->query("SELECT * FROM bookings
                     <th>日期</th>
                     <th>開始時間</th>
                     <th>結束時間</th>
-                    <th>登記時間</th>
+                    <th>分配時間</th>
                 </tr>
             </thead>
             <tbody>
@@ -128,7 +133,7 @@ $result = $conn->query("SELECT * FROM bookings
                         </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何有效預約紀錄</td></tr>";
+                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何有效的排班預約紀錄</td></tr>";
                 }
                 ?>
             </tbody>
@@ -137,7 +142,7 @@ $result = $conn->query("SELECT * FROM bookings
 
     <div class="action-group">
         <a href="index.html" class="btn">返回首頁</a>
-        <a href="booking.html" class="btn btn-primary">我要預約</a>
+        <a href="booking.html" class="btn btn-primary">填寫下週志願</a>
     </div>
 </div>
 
