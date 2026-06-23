@@ -175,8 +175,7 @@ $result = $conn->query($sql);
 
     <div class="action-group">
         <a href="index.html" class="btn">返回首頁</a>
-        <a href="booking.html" class="btn">填寫預約志願</a>
-        <a href="direct_booking.html" class="btn btn-primary">臨時直接預約</a>
+        <a href="booking.html" class="btn btn-primary">預約本週</a>
     </div>
 </div>
 
