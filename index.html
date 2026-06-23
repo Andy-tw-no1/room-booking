@@ -6,7 +6,8 @@
     <title>屏大熱音團室預約系統</title>
     <style>
         body {
-            background: radial-gradient(circle at center, #1e1233 0%, #0d0714 100%);
+            /* 背景改為帶暗紅擴散的深邃純黑感 */
+            background: radial-gradient(circle at center, #1a0505 0%, #000000 100%);
             color: #fff;
             font-family: 'Helvetica Neue', Arial, sans-serif;
             display: flex;
@@ -18,33 +19,58 @@
         }
         .container {
             text-align: center;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 50px 40px;
+            background: rgba(20, 5, 5, 0.6);
+            padding: 40px 40px;
             border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            /* 邊框改為微弱紅光 */
+            border: 1px solid rgba(255, 0, 51, 0.2);
             backdrop-filter: blur(10px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            width: 100%;
+            max-width: 400px;
         }
-        h1 {
-            font-size: 2.5rem;
+
+        /* =====================
+           新增：Logo 專用樣式
+           ===================== */
+        .logo-container {
+            text-align: center;
             margin-bottom: 10px;
+        }
+        .club-logo {
+            width: 130px; /* 調整首頁 Logo 大小 */
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(255, 0, 51, 0.5)); /* Logo 紅色發光 */
+            transition: all 0.3s ease;
+        }
+        .club-logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 18px rgba(255, 0, 51, 0.8));
+        }
+
+        h1 {
+            font-size: 2.3rem;
+            margin: 10px 0 5px 0;
             letter-spacing: 2px;
-            background: linear-gradient(45deg, #ff007f, #7f00ff);
+            /* 標題漸層改為：烈火紅 到 曜石黑灰 */
+            background: linear-gradient(45deg, #ff0033, #aa0022);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(255, 0, 127, 0.3);
+            text-shadow: 0 0 20px rgba(255, 0, 51, 0.4);
         }
         p {
-            color: #aaa;
-            margin-bottom: 40px;
-            font-size: 1rem;
+            color: #777;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
         }
         .section-label {
-            color: #888;
-            font-size: 0.8rem;
+            color: #cc0029; /* 區塊標籤改為血紅色 */
+            font-size: 0.85rem;
+            font-weight: bold;
             letter-spacing: 2px;
             text-transform: uppercase;
-            margin: 20px 0 10px;
+            margin: 15px 0 10px;
         }
         .btn-group {
             display: flex;
@@ -55,8 +81,8 @@
             background: transparent;
             color: #fff;
             border: 2px solid;
-            padding: 14px 30px;
-            font-size: 1.1rem;
+            padding: 13px 30px;
+            font-size: 1.05rem;
             font-weight: bold;
             border-radius: 30px;
             cursor: pointer;
@@ -64,68 +90,46 @@
             transition: all 0.3s ease;
             letter-spacing: 1px;
         }
-        .btn-booking {
-            border-color: #ff007f;
-            box-shadow: 0 0 15px rgba(255, 0, 127, 0.2);
+        
+        /* 統一按鈕色彩：黑底、紅框、滑鼠移上去時亮烈火紅 */
+        .btn-red {
+            border-color: #ff0033;
+            box-shadow: 0 0 15px rgba(255, 0, 51, 0.15);
         }
-        .btn-booking:hover {
-            background: #ff007f;
-            box-shadow: 0 0 25px rgba(255, 0, 127, 0.6);
+        .btn-red:hover {
+            background: #ff0033;
+            color: #fff;
+            box-shadow: 0 0 25px rgba(255, 0, 51, 0.6);
             transform: translateY(-3px);
         }
-        .btn-wish {
-            border-color: #7f00ff;
-            box-shadow: 0 0 15px rgba(127, 0, 255, 0.2);
-        }
-        .btn-wish:hover {
-            background: #7f00ff;
-            box-shadow: 0 0 25px rgba(127, 0, 255, 0.6);
-            transform: translateY(-3px);
-        }
-        .btn-view {
-            border-color: #00ffff;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-        }
-        .btn-view:hover {
-            background: #00ffff;
-            color: #000;
-            box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
-            transform: translateY(-3px);
-        }
-        .btn-result {
-            border-color: #00ff99;
-            box-shadow: 0 0 15px rgba(0, 255, 153, 0.2);
-        }
-        .btn-result:hover {
-            background: #00ff99;
-            color: #000;
-            box-shadow: 0 0 25px rgba(0, 255, 153, 0.6);
-            transform: translateY(-3px);
-        }
+        
         .divider {
             border: none;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            margin: 20px 0;
+            border-top: 1px solid rgba(255, 0, 51, 0.15);
+            margin: 25px 0;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>屏大熱音團室預約</h1>
-    <p>Nptu_hotmusic</p>
+    
+    <div class="logo-container">
+        <img src="logo.png" alt="屏大熱音 Logo" class="club-logo">
+    </div>
 
-    <div class="section-label">本週即時預約</div>
+    <h1>屏大熱音</h1>
+    <p>NPTU HOT MUSIC</p>
+
+    <div class="section-label">預約狀況</div>
     <div class="btn-group">
-        <a href="booking.html" class="btn btn-booking">進入預約系統</a>
-        <a href="view.php" class="btn btn-view">查看本週預約</a>
+        <a href="view.php" class="btn btn-red">查看團室名單</a>
     </div>
 
     <hr class="divider">
 
-    <div class="section-label">下週志願登記（週日 21:00 截止）</div>
+    <div class="section-label">時段爭奪戰</div>
     <div class="btn-group">
-        <a href="wish.html" class="btn btn-wish">填寫下週志願</a>
-        <a href="result.php" class="btn btn-result">查看分配結果</a>
+        <a href="booking.html" class="btn btn-red">登記下週志願</a>
     </div>
 </div>
 </body>
