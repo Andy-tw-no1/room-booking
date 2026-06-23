@@ -2,15 +2,24 @@
 include "db.php";
 date_default_timezone_set("Asia/Taipei");
 
-// 取得今天日期
-$today = date("Y-m-d");
+// 使用 UNION ALL 把「手動直接預約 (bookings)」與「自動分配結果 (allocations)」合併
+// 並且同時套用方案一：自動過濾掉今天以前、以及今天已經結束的過期預約
+$sql = "
+    SELECT user, band_name, date, start_time, end_time, created_at, '直接預約' AS source 
+    FROM bookings 
+    WHERE date > CURDATE() OR (date = CURDATE() AND end_time >= CURTIME())
 
-// 修正 SQL：只撈取日期大於或等於今天的預約紀錄
-$result = $conn->query("
-    SELECT * FROM bookings 
-    WHERE date >= '$today' 
+    UNION ALL
+
+    SELECT user, band_name, date, start_time, end_time, created_at, '志願分配' AS source 
+    FROM allocations 
+    WHERE date IS NOT NULL 
+      AND (date > CURDATE() OR (date = CURDATE() AND end_time >= CURTIME()))
+
     ORDER BY date ASC, start_time ASC
-");
+";
+
+$result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -31,7 +40,7 @@ $result = $conn->query("
         }
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 950px;
         }
         h2 {
             color: #00ffff;
@@ -51,7 +60,7 @@ $result = $conn->query("
             width: 100%;
             border-collapse: collapse;
             text-align: center;
-            min-width: 600px;
+            min-width: 650px;
         }
         th, td {
             padding: 14px;
@@ -69,6 +78,23 @@ $result = $conn->query("
         .no-data {
             padding: 30px;
             color: #888;
+        }
+        /* 來源標籤樣式 */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-direct {
+            background: rgba(0, 255, 255, 0.2);
+            color: #00ffff;
+            border: 1px solid #00ffff;
+        }
+        .badge-alloc {
+            background: rgba(255, 0, 127, 0.2);
+            color: #ff007f;
+            border: 1px solid #ff007f;
         }
         .action-group {
             margin-top: 30px;
@@ -105,25 +131,32 @@ $result = $conn->query("
 <body>
 
 <div class="container">
-    <h2>團室預約名單</h2>
+    <h2>團室預約總名單</h2>
 
     <div class="table-responsive">
         <table>
             <thead>
                 <tr>
+                    <th>預約類型</th>
                     <th>使用者</th>
                     <th>團名</th>
                     <th>日期</th>
                     <th>開始時間</th>
                     <th>結束時間</th>
-                    <th>登記時間</th>
+                    <th>登記/分配時間</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 if ($result && $result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
+                        // 根據來源顯示不同的彩色標籤
+                        $sourceBadge = ($row['source'] === '直接預約') 
+                            ? "<span class='badge badge-direct'>直接預約</span>" 
+                            : "<span class='badge badge-alloc'>志願分配</span>";
+
                         echo "<tr>
+                            <td>" . $sourceBadge . "</td>
                             <td>" . htmlspecialchars($row['user']) . "</td>
                             <td>" . htmlspecialchars($row['band_name']) . "</td>
                             <td>" . htmlspecialchars($row['date']) . "</td>
@@ -133,7 +166,7 @@ $result = $conn->query("
                         </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='6' class='no-data'>目前尚無任何預約紀錄</td></tr>";
+                    echo "<tr><td colspan='7' class='no-data'>目前尚無任何有效的預約紀錄</td></tr>";
                 }
                 ?>
             </tbody>
@@ -142,7 +175,8 @@ $result = $conn->query("
 
     <div class="action-group">
         <a href="index.html" class="btn">返回首頁</a>
-        <a href="booking.html" class="btn btn-primary">我要預約</a>
+        <a href="booking.html" class="btn">填寫預約志願</a>
+        <a href="direct_booking.html" class="btn btn-primary">臨時直接預約</a>
     </div>
 </div>
 
