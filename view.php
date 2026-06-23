@@ -29,7 +29,8 @@ $result = $conn->query($sql);
     <title>預約名單 - 屏大熱音</title>
     <style>
         body {
-            background: #0d0714;
+            /* 調整為極致純黑背景 */
+            background: #0b0505; 
             color: #fff;
             font-family: Arial, sans-serif;
             padding: 30px 20px;
@@ -43,18 +44,21 @@ $result = $conn->query($sql);
             max-width: 950px;
         }
         h2 {
-            color: #00ffff;
-            text-shadow: 0 0 10px rgba(0,255,255,0.4);
+            /* 標題改為紅色，並帶有紅光外框特效 */
+            color: #ff0033; 
+            text-shadow: 0 0 12px rgba(255, 0, 51, 0.5);
             margin-bottom: 25px;
             text-align: center;
         }
         .table-responsive {
             width: 100%;
             overflow-x: auto;
-            background: rgba(255, 255, 255, 0.03);
+            /* 背景改為微透明黑灰色 */
+            background: rgba(20, 10, 10, 0.6); 
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            /* 邊框改為帶有暗紅線條 */
+            border: 1px solid rgba(255, 0, 51, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
         }
         table {
             width: 100%;
@@ -67,34 +71,36 @@ $result = $conn->query($sql);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         th {
-            background: rgba(255, 255, 255, 0.07);
-            color: #ff007f;
+            background: rgba(255, 0, 51, 0.1); /* 表格標題背景帶有淡紅 */
+            color: #ff3355; /* 欄位名字改為亮紅色 */
             font-weight: bold;
             letter-spacing: 1px;
         }
         tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 0, 51, 0.04); /* 滑鼠劃過表格時亮起微弱紅光 */
         }
         .no-data {
             padding: 30px;
-            color: #888;
+            color: #666;
         }
-        /* 來源標籤樣式 */
+        /* 來源標籤樣式調整 */
         .badge {
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
         }
+        /* 直接預約改成暗暗的紅框 */
         .badge-direct {
-            background: rgba(0, 255, 255, 0.2);
-            color: #00ffff;
-            border: 1px solid #00ffff;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ccc;
+            border: 1px solid #555;
         }
+        /* 志願分配改成亮紅色標籤 */
         .badge-alloc {
-            background: rgba(255, 0, 127, 0.2);
-            color: #ff007f;
-            border: 1px solid #ff007f;
+            background: rgba(255, 0, 51, 0.15);
+            color: #ff0033;
+            border: 1px solid #ff0033;
         }
         .action-group {
             margin-top: 30px;
@@ -117,14 +123,15 @@ $result = $conn->query($sql);
             background: #fff;
             color: #000;
         }
+        /* 我要預約按鈕徹底改為烈火紅 */
         .btn-primary {
-            background: #ff007f;
-            border-color: #ff007f;
+            background: #ff0033; 
+            border-color: #ff0033;
         }
         .btn-primary:hover {
-            background: #e60073;
+            background: #cc0029;
             color: #fff;
-            box-shadow: 0 0 15px rgba(255,0,127,0.4);
+            box-shadow: 0 0 15px rgba(255, 0, 51, 0.6);
         }
     </style>
 </head>
