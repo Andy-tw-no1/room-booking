@@ -46,51 +46,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ==========================================
-// 3. 接收表單資料（已修正拼字錯誤 🛠️）
+// 3. 接收表單資料（防 SQL 注入處理）
 // ==========================================
 $user = mysqli_real_escape_string($conn, $_POST['user']);
 $band_name = mysqli_real_escape_string($conn, $_POST['band_name']);
 
-// 接收 5 個志願的資料與防 SQL 注入處理：
+// 配合你的資料庫欄位，只接收日期與開始時間
 $wish1_date = !empty($_POST['wish1_date']) ? mysqli_real_escape_string($conn, $_POST['wish1_date']) : null;
 $wish1_start = !empty($_POST['wish1_start']) ? mysqli_real_escape_string($conn, $_POST['wish1_start']) : null;
-$wish1_duration = !empty($_POST['wish1_duration']) ? intval($_POST['wish1_duration']) : null;
 
 $wish2_date = !empty($_POST['wish2_date']) ? mysqli_real_escape_string($conn, $_POST['wish2_date']) : null;
 $wish2_start = !empty($_POST['wish2_start']) ? mysqli_real_escape_string($conn, $_POST['wish2_start']) : null;
-$wish2_duration = !empty($_POST['wish2_duration']) ? intval($_POST['wish2_duration']) : null;
 
 $wish3_date = !empty($_POST['wish3_date']) ? mysqli_real_escape_string($conn, $_POST['wish3_date']) : null;
 $wish3_start = !empty($_POST['wish3_start']) ? mysqli_real_escape_string($conn, $_POST['wish3_start']) : null;
-$wish3_duration = !empty($_POST['wish3_duration']) ? intval($_POST['wish3_duration']) : null;
 
 $wish4_date = !empty($_POST['wish4_date']) ? mysqli_real_escape_string($conn, $_POST['wish4_date']) : null;
 $wish4_start = !empty($_POST['wish4_start']) ? mysqli_real_escape_string($conn, $_POST['wish4_start']) : null;
-$wish4_duration = !empty($_POST['wish4_duration']) ? intval($_POST['wish4_duration']) : null;
 
 $wish5_date = !empty($_POST['wish5_date']) ? mysqli_real_escape_string($conn, $_POST['wish5_date']) : null;
 $wish5_start = !empty($_POST['wish5_start']) ? mysqli_real_escape_string($conn, $_POST['wish5_start']) : null;
-$wish5_duration = !empty($_POST['wish5_duration']) ? intval($_POST['wish5_duration']) : null;
 
 
 // ==========================================
-// 4. 寫入資料庫（請根據你實際的資料表名稱與欄位調整）
+// 4. 寫入資料庫（完全對齊你的 wishes 資料表欄位 🎯）
 // ==========================================
 $sql = "INSERT INTO wishes (
             user, band_name, 
-            wish1_date, wish1_start, wish1_duration,
-            wish2_date, wish2_start, wish2_duration,
-            wish3_date, wish3_start, wish3_duration,
-            wish4_date, wish4_start, wish4_duration,
-            wish5_date, wish5_start, wish5_duration,
+            wish1_date, wish1_start,
+            wish2_date, wish2_start,
+            wish3_date, wish3_start,
+            wish4_date, wish4_start,
+            wish5_date, wish5_start,
             created_at
         ) VALUES (
             '$user', '$band_name', 
-            '$wish1_date', '$wish1_start', " . ($wish1_duration ?? "NULL") . ",
-            " . ($wish2_date ? "'$wish2_date'" : "NULL") . ", " . ($wish2_start ? "'$wish2_start'" : "NULL") . ", " . ($wish2_duration ?? "NULL") . ",
-            " . ($wish3_date ? "'$wish3_date'" : "NULL") . ", " . ($wish3_start ? "'$wish3_start'" : "NULL") . ", " . ($wish3_duration ?? "NULL") . ",
-            " . ($wish4_date ? "'$wish4_date'" : "NULL") . ", " . ($wish4_start ? "'$wish4_start'" : "NULL") . ", " . ($wish4_duration ?? "NULL") . ",
-            " . ($wish5_date ? "'$wish5_date'" : "NULL") . ", " . ($wish5_start ? "'$wish5_start'" : "NULL") . ", " . ($wish5_duration ?? "NULL") . ",
+            '$wish1_date', '$wish1_start',
+            " . ($wish2_date ? "'$wish2_date'" : "NULL") . ", " . ($wish2_start ? "'$wish2_start'" : "NULL") . ",
+            " . ($wish3_date ? "'$wish3_date'" : "NULL") . ", " . ($wish3_start ? "'$wish3_start'" : "NULL") . ",
+            " . ($wish4_date ? "'$wish4_date'" : "NULL") . ", " . ($wish4_start ? "'$wish4_start'" : "NULL") . ",
+            " . ($wish5_date ? "'$wish5_date'" : "NULL") . ", " . ($wish5_start ? "'$wish5_start'" : "NULL") . ",
             NOW()
         )";
 
