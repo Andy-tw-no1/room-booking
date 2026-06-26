@@ -6,7 +6,8 @@
     <title>填寫下週志願 - 屏大熱音</title>
     <style>
         body {
-            background: #0d0714;
+            /* 改為極致純黑背景 */
+            background: #0b0505;
             color: #fff;
             font-family: Arial, sans-serif;
             padding: 30px 20px;
@@ -18,36 +19,42 @@
         .wrapper {
             width: 100%;
             max-width: 550px;
-            background: rgba(255, 255, 255, 0.05);
+            /* 背景調整為黑灰色 */
+            background: rgba(20, 10, 10, 0.6);
             padding: 30px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            /* 邊框改為帶有暗紅線條 */
+            border: 1px solid rgba(255, 0, 51, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
         }
         h2 {
             margin-top: 0;
-            color: #7f00ff;
-            text-shadow: 0 0 10px rgba(127,0,255,0.5);
+            /* 改為亮紅色，並帶有紅光外框特效 */
+            color: #ff0033;
+            text-shadow: 0 0 12px rgba(255, 0, 51, 0.5);
             text-align: center;
         }
         #nowTime {
             text-align: center;
             font-size: 0.9rem;
-            color: #00ffff;
+            /* 時間顯示改為亮紅 */
+            color: #ff3355;
             margin-bottom: 25px;
-            background: rgba(0,255,255,0.1);
+            background: rgba(255, 0, 51, 0.1);
             padding: 8px;
             border-radius: 6px;
+            border: 1px solid rgba(255, 0, 51, 0.15);
         }
         .wish-block {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255, 0, 51, 0.1);
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 15px;
         }
         .wish-title {
-            color: #7f00ff;
+            /* 志願標題改為烈火紅 */
+            color: #ff0033;
             font-weight: bold;
             margin-bottom: 10px;
             font-size: 0.95rem;
@@ -69,8 +76,8 @@
         input, select {
             width: 100%;
             padding: 10px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 6px;
             color: #fff;
             font-size: 0.95rem;
@@ -79,18 +86,20 @@
         }
         input:focus, select:focus {
             outline: none;
-            border-color: #7f00ff;
-            box-shadow: 0 0 10px rgba(127,0,255,0.4);
+            /* 聚焦時框線變紅 */
+            border-color: #ff0033;
+            box-shadow: 0 0 10px rgba(255, 0, 51, 0.4);
         }
         select option {
-            background: #1a0a2e;
+            background: #140505; /* 下拉選單背景也改成暗紅色調 */
         }
         .form-group-full {
             margin-bottom: 20px;
         }
+        /* 送出按鈕徹底改為烈火紅漸層，並保持質感 */
         .btn-submit {
             width: 100%;
-            background: linear-gradient(45deg, #7f00ff, #ff007f);
+            background: linear-gradient(45deg, #cc0029, #ff0033);
             color: white;
             border: none;
             padding: 14px;
@@ -98,28 +107,38 @@
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(127,0,255,0.4);
+            box-shadow: 0 5px 15px rgba(255, 0, 51, 0.3);
             transition: transform 0.2s, opacity 0.2s;
         }
         .btn-submit:hover {
             transform: translateY(-2px);
-            opacity: 0.9;
+            opacity: 0.95;
+            box-shadow: 0 5px 20px rgba(255, 0, 51, 0.6);
+        }
+        /* 停用按鈕（防連點生效時）的樣式 */
+        .btn-submit:disabled {
+            background: #444 !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            transform: none !important;
+            opacity: 0.6;
         }
         .btn-back {
             display: block;
             text-align: center;
             margin-top: 15px;
-            color: #aaa;
+            color: #888;
             text-decoration: none;
             font-size: 0.9rem;
+            transition: color 0.2s;
         }
-        .btn-back:hover { color: #fff; }
+        .btn-back:hover { color: #ff0033; } /* 滑鼠移上去返回變紅 */
         .notice {
-            background: rgba(127,0,255,0.1);
-            border-left: 4px solid #7f00ff;
+            background: rgba(255, 0, 51, 0.05);
+            border-left: 4px solid #ff0033;
             padding: 10px 14px;
             border-radius: 4px;
-            color: #ccc;
+            color: #bbb;
             font-size: 0.85rem;
             margin-bottom: 20px;
             line-height: 1.6;
@@ -139,7 +158,7 @@
         ☀️ 電腦版上午下午分別為1和2
     </div>
 
-    <form action="submit_wish.php" method="POST">
+    <form action="submit_wish.php" method="POST" onsubmit="const btn=this.querySelector('.btn-submit'); btn.disabled=true; btn.innerText='送出中，請稍候...';">
         <div class="form-group-full">
             <label>使用者姓名</label>
             <input type="text" name="user" placeholder="請輸入您的姓名" required>
@@ -149,7 +168,6 @@
             <input type="text" name="band_name" placeholder="請輸入團名" required>
         </div>
 
-        <!-- 第1志願 -->
         <div class="wish-block">
             <div class="wish-title">第 1 志願</div>
             <div class="form-row">
@@ -171,7 +189,6 @@
             </div>
         </div>
 
-        <!-- 第2志願 -->
         <div class="wish-block">
             <div class="wish-title">第 2 志願（選填）</div>
             <div class="form-row">
@@ -194,7 +211,6 @@
             </div>
         </div>
 
-        <!-- 第3志願 -->
         <div class="wish-block">
             <div class="wish-title">第 3 志願（選填）</div>
             <div class="form-row">
@@ -217,7 +233,6 @@
             </div>
         </div>
 
-        <!-- 第4志願 -->
         <div class="wish-block">
             <div class="wish-title">第 4 志願（選填）</div>
             <div class="form-row">
@@ -240,7 +255,6 @@
             </div>
         </div>
 
-        <!-- 第5志願 -->
         <div class="wish-block">
             <div class="wish-title">第 5 志願（選填）</div>
             <div class="form-row">
