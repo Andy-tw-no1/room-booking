@@ -46,13 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ==========================================
-// 3. 接收表單資料
+// 3. 接收表單資料（已修正拼字錯誤 🛠️）
 // ==========================================
-$user = mysqli_real_escape_escape_string($conn, $_POST['user']);
+$user = mysqli_real_escape_string($conn, $_POST['user']);
 $band_name = mysqli_real_escape_string($conn, $_POST['band_name']);
 
-// 這裡你可以根據你資料庫的架構去寫。
-// 假設你是把 5 個志願存在同一個欄位，或是拆開，以下是標準的接收與防 SQL 注入處理：
+// 接收 5 個志願的資料與防 SQL 注入處理：
 $wish1_date = !empty($_POST['wish1_date']) ? mysqli_real_escape_string($conn, $_POST['wish1_date']) : null;
 $wish1_start = !empty($_POST['wish1_start']) ? mysqli_real_escape_string($conn, $_POST['wish1_start']) : null;
 $wish1_duration = !empty($_POST['wish1_duration']) ? intval($_POST['wish1_duration']) : null;
@@ -77,7 +76,6 @@ $wish5_duration = !empty($_POST['wish5_duration']) ? intval($_POST['wish5_durati
 // ==========================================
 // 4. 寫入資料庫（請根據你實際的資料表名稱與欄位調整）
 // ==========================================
-// 💡 這裡以常見的 wishes 表單儲存為範例（你可以替換成你原本寫好的 SQL INSERT 指令）：
 $sql = "INSERT INTO wishes (
             user, band_name, 
             wish1_date, wish1_start, wish1_duration,
@@ -100,8 +98,6 @@ if ($conn->query($sql) === TRUE) {
     // ==========================================
     // 5. 🚀 防 F5 機制：資料庫寫入成功後，立刻重導向！
     // ==========================================
-    // 絕對不要在原地 echo "成功"，否則使用者重新整理網頁又會再送一次！
-    // 這裡我們直接用 Javascript 彈窗提示成功，並重導向到分配結果或首頁
     echo "<script>
         alert('下週志願登記成功！系統將在週日 21:10 自動完成分配。');
         window.location.href = 'result.php'; 
